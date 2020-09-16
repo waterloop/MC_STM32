@@ -3,6 +3,7 @@
 	<name>MC_SVPWM</name>
 	<comment></comment>
 	<projects>
+		<project>MC_SVPWM</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
