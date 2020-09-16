@@ -24,7 +24,7 @@
 /* USER CODE BEGIN Includes */
 #include "math.h"
 #include "VHZ.h"
-
+#include "SVPWM.h"
 #include "PID.h"
 
 /* USER CODE END Includes */
@@ -77,7 +77,7 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
   SVPWM_Init(&svpwm1, 10000);
-  VHZ_Init(&vhz1, 0.01, 10, 10, 100);
+  VHZ_Init(&vhz1, 0.01, 0.1, 10, 100);
   PIDController_Init(&slip, 5, 0, -500, 500, 0, 0, 10000);
   /* USER CODE END 1 */
 
@@ -228,10 +228,6 @@ static void MX_TIM1_Init(void)
   {
     Error_Handler();
   }
-  if (HAL_TIM_OC_Init(&htim1) != HAL_OK)
-  {
-    Error_Handler();
-  }
   sSlaveConfig.SlaveMode = TIM_SLAVEMODE_DISABLE;
   sSlaveConfig.InputTrigger = TIM_TS_ITR0;
   if (HAL_TIM_SlaveConfigSynchro(&htim1, &sSlaveConfig) != HAL_OK)
@@ -260,8 +256,7 @@ static void MX_TIM1_Init(void)
   {
     Error_Handler();
   }
-  sConfigOC.OCMode = TIM_OCMODE_FORCED_ACTIVE;
-  if (HAL_TIM_OC_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
+  if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
   {
     Error_Handler();
   }

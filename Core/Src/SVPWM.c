@@ -25,8 +25,8 @@ void SVPWM_Init(SVPWM *svm, float SwitchFreq) {
 }
 
 void SVPWM_Update(SVPWM *svm, VHZPROFILE *vhz, TIM_HandleTypeDef *htim) {
-	svm->ModIndex = 1; /*vhz->Volt / vhz->VoltRated;*/
-	svm->Freq = 5; /*vhz->Freq;*/
+	svm->ModIndex = 0.9; /*vhz->Volt / vhz->VoltRated;*/
+	svm->Freq = 0.01; /*vhz->Freq;*/
 	svm->StepAngle = (RADIANS * svm->Freq) / svm->SwitchFreq;
     svm->EntryOld = svm->NewEntry;
     svm->Alpha = svm->Alpha + svm->StepAngle;

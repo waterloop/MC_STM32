@@ -27,8 +27,7 @@ Core/Src/SVPWM.o: ../Core/Src/SVPWM.c ../Core/Inc/SVPWM.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_pwr.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_pwr_ex.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_tim.h \
- ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_tim_ex.h \
- ../Core/Inc/SVPWM.h
+ ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_tim_ex.h
 
 ../Core/Inc/SVPWM.h:
 
@@ -91,5 +90,3 @@ Core/Src/SVPWM.o: ../Core/Src/SVPWM.c ../Core/Inc/SVPWM.h \
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_tim.h:
 
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_tim_ex.h:
-
-../Core/Inc/SVPWM.h:
