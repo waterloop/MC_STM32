@@ -46,11 +46,11 @@ MC_SVPWM.bin \
 all: MC_SVPWM.elf secondary-outputs
 
 dependents:
-	-cd C:/Users/kamra/STM32CubeIDE/workspace_1.4.0/MC_SVPWM/Release && $(MAKE) all
+	-cd C:/Users/annec/Documents/MC_STM32/Release && $(MAKE) all
 
 # Tool invocations
-MC_SVPWM.elf: $(OBJS) $(USER_OBJS) C:/Users/kamra/STM32CubeIDE/workspace_1.4.0/MC_SVPWM/Release/MC_SVPWM.elf C:\Users\kamra\STM32CubeIDE\workspace_1.4.0\MC_SVPWM\STM32L432KCUX_FLASH.ld
-	arm-none-eabi-gcc -o "MC_SVPWM.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\kamra\STM32CubeIDE\workspace_1.4.0\MC_SVPWM\STM32L432KCUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="MC_SVPWM.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+MC_SVPWM.elf: $(OBJS) $(USER_OBJS) C:/Users/annec/Documents/MC_STM32/Release/MC_SVPWM.elf C:\Users\annec\Documents\MC_STM32\STM32L432KCUX_FLASH.ld
+	arm-none-eabi-gcc -o "MC_SVPWM.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Users\annec\Documents\MC_STM32\STM32L432KCUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="MC_SVPWM.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -78,6 +78,6 @@ secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST) $(OBJCOPY_BIN)
 
 .PHONY: all clean dependents
 .SECONDARY:
-C:/Users/kamra/STM32CubeIDE/workspace_1.4.0/MC_SVPWM/Release/MC_SVPWM.elf:
+C:/Users/annec/Documents/MC_STM32/Release/MC_SVPWM.elf:
 
 -include ../makefile.targets
