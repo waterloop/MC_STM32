@@ -102,8 +102,6 @@ int main(void)
   PIDController_Init(&slip, 5, 0, -500, 500, 0, 0, 10000);
 
   // Setting up SPI buffer
-  char uart_buf[50];
-  int uart_buf_len;
   char spi_buf[20];
   uint8_t addr;
   uint8_t wip;
@@ -142,10 +140,6 @@ int main(void)
   // Chip select pin should default high
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
 
-  // Say something
-  uart_buf_len = sprintf(uart_buf, "hello?");
-  HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);
-
   // Set starting address in EEPROM (arbitrarily set to 5). Note that for the
   // 25AA040A, we can't do sequential writes outside of page (16 bytes)
   addr = 0x05;
@@ -163,125 +157,125 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  // Finite state machine to allow for non-blocking SPI transmit/receive
-	     switch(state)
-	     {
-	       // Transmit
-	       case 0:
+	  switch(state)
+	      {
+	        // Transmit
+	        case 0:
 
-	         // First 2 bytes of buffer are instruction and address
-	         //spi_buf[0] = 'h';
-	         //spi_buf[1] = 0;
+	          // First 2 bytes of buffer are instruction and address
+	          spi_buf[0] = EEPROM_WRITE;
+	          spi_buf[1] = addr;
 
-	         // Fill buffer with stuff to write to EEPROM
-//	         for (int i = 0; i < 10; i++)
-//	         {
-//	           spi_buf[2 * i] = i;
-//	         }
+	          // Fill buffer with stuff to write to EEPROM
+	          for (int i = 0; i < 10; i++)
+	          {
+	            spi_buf[2 + i] = i;
+	          }
 
-	         // Enable write enable latch (allow write operations)
-	         HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
-	         HAL_SPI_Transmit(&hspi1, (uint8_t *)&EEPROM_WREN, 1, 100);
-	         HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+	          // Enable write enable latch (allow write operations)
+	          HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+	          HAL_SPI_Transmit(&hspi1, (uint8_t *)&EEPROM_WREN, 1, 100);
+	          HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
 
-	         // Perform non-blocking write to SPI
-	         HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
-	         HAL_SPI_Transmit_IT(&hspi1, (uint8_t *)spi_buf, 12);
+	          // Perform non-blocking write to SPI
+	          HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+	          HAL_SPI_Transmit_IT(&hspi1, (uint8_t *)spi_buf, 12);
 
-	         // Go to next state: waiting for interrupt flag
-	         state  = 1;
+	          // Go to next state: waiting for interrupt flag
+	          state += 1;
 
-	         break;
+	          break;
 
-	       // Wait for transmit flag
-	       case 1:
+	        // Wait for transmit flag
+	        case 1:
 
-	         if (spi_xmit_flag)
-	         {
-	           // Clear flag and go to next state
-	           spi_xmit_flag = 0;
-	           state  = 1;
-	         }
+	          if (spi_xmit_flag)
+	          {
+	            // Clear flag and go to next state
+	            spi_xmit_flag = 0;
+	            state += 1;
+	          }
 
-	         break;
+	          break;
 
-	       // Wait for WIP bit to be cleared
-	       case 2:
+	        // Wait for WIP bit to be cleared
+	        case 2:
 
-	         // Read status register
-	         HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
-	         HAL_SPI_Transmit(&hspi1, (uint8_t *)&EEPROM_RDSR, 1, 100);
-	         HAL_SPI_Receive(&hspi1, (uint8_t *)spi_buf, 1, 100);
-	         HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+	          // Read status register
+	          HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+	          HAL_SPI_Transmit(&hspi1, (uint8_t *)&EEPROM_RDSR, 1, 100);
+	          HAL_SPI_Receive(&hspi3, (uint8_t *)spi_buf, 1, 100);
+	          HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
 
-	         // Mask out WIP bit
-	         wip = spi_buf[0] & 0b00000001;
+	          // Mask out WIP bit
+	          wip = spi_buf[0] & 0b00000001;
 
-	         // If WIP is cleared, go to next state
-	         if (wip == 0)
-	         {
-	           state  = 1;
-	         }
+	          // If WIP is cleared, go to next state
+	          if (wip == 0)
+	          {
+	            state += 1;
+	          }
 
-	         break;
+	          break;
 
-	       // Set up for interrupt-based SPI receive
-	       case 3:
+	        // Set up for interrupt-based SPI receive
+	        case 3:
 
-	         // Clear SPI buffer
-	         for (int i = 0; i < 12; i++)
-	         {
-	           spi_buf[i] = 0;
-	         }
+	          // Clear SPI buffer
+	          for (int i = 0; i < 12; i++)
+	          {
+	            spi_buf[i] = 0;
+	          }
 
-	         // Read the 10 bytes back
-	         HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
-	         HAL_SPI_Transmit(&hspi1, (uint8_t *)&EEPROM_READ, 1, 100);
-	         HAL_SPI_Transmit(&hspi1, (uint8_t *)&addr, 1, 100);
-	         HAL_SPI_Receive_IT(&hspi1, (uint8_t *)spi_buf, 10);
+	          // Read the 10 bytes back
+	          HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+	          HAL_SPI_Transmit(&hspi1, (uint8_t *)&EEPROM_READ, 1, 100);
+	          HAL_SPI_Transmit(&hspi1, (uint8_t *)&addr, 1, 100);
+	          HAL_SPI_Receive_IT(&hspi3, (uint8_t *)spi_buf, 10);
 
-	         // Go to next state: waiting for receive to finish
-	         state  = 1;
+	          // Go to next state: waiting for receive to finish
+	          state += 1;
 
-	         break;
+	          break;
 
-	       // Wait for receive flag
-	       case 4:
+	        // Wait for receive flag
+	        case 4:
 
-	         if (spi_recv_flag)
-	         {
-	           // Clear flag and go to next state
-	           spi_recv_flag = 0;
-	           state  = 1;
-	         }
+	          if (spi_recv_flag)
+	          {
+	            // Clear flag and go to next state
+	            spi_recv_flag = 0;
+	            state += 1;
+	          }
 
-	         break;
+	          break;
 
-	       // Print out received bytes and wait before retransmitting
-	       case 5:
+	        // Print out received bytes and wait before retransmitting
+	        case 5:
 
-	         // Print out bytes
-	         for (int i = 0; i < 10; i++)
-	         {
-	           uart_buf_len = sprintf(uart_buf,
-	                                   "0xx ",(unsigned int)spi_buf[i]);
-	           HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);
-	         }
+	          // Print out bytes
+//	          for (int i = 0; i < 10; i++)
+//	          {
+//	            uart_buf_len = sprintf(uart_buf,
+//	                                    "0xx ",(unsigned int)spi_buf[i]);
+//	            HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);
+//	          }
 
-	         // Print newline
-	         uart_buf_len = sprintf(uart_buf, "\r\n");
-	         HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);
+//	          // Print newline
+//	          uart_buf_len = sprintf(uart_buf, "\r\n");
+//	          HAL_UART_Transmit(&huart2, (uint8_t *)uart_buf, uart_buf_len, 100);
 
-	         // Wait a few seconds before retransmitting (yes, I know that this is
-	         // blocking--you can make it non-blocking if you wish. I'm lazy.)
-	         HAL_Delay(1000);
-	         state = 0;
+	          // Wait a few seconds before retransmitting (yes, I know that this is
+	          // blocking--you can make it non-blocking if you wish. I'm lazy.)
+	          HAL_Delay(1000);
+	          state = 0;
 
-	         break;
+	          break;
 
-	       default:
-	         break;
-	     }
+	        default:
+	          break;
+	      }
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -593,7 +587,7 @@ static void MX_USART2_UART_Init(void)
 
   /* USER CODE END USART2_Init 1 */
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 57600;
+  huart2.Init.BaudRate = 9600;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;

@@ -1,6 +1,6 @@
-main.c:309:6:SystemClock_Config	192	static
-main.c:97:5:main	184	static
-main.c:652:6:HAL_TIM_PeriodElapsedCallback	16	static
-main.c:674:6:HAL_SPI_TxCpltCallback	8	static
-main.c:682:6:HAL_SPI_RxCpltCallback	8	static
-main.c:695:6:Error_Handler	0	static
+main.c:303:6:SystemClock_Config	192	static
+main.c:97:5:main	168	static
+main.c:646:6:HAL_TIM_PeriodElapsedCallback	16	static
+main.c:668:6:HAL_SPI_TxCpltCallback	8	static
+main.c:676:6:HAL_SPI_RxCpltCallback	8	static
+main.c:689:6:Error_Handler	0	static
