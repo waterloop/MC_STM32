@@ -95,8 +95,7 @@ volatile uint8_t spi_recv_flag = 0;
   * @brief  The application entry point.
   * @retval int
   */
-int main(void)
-{
+int main(void){ //This is our main setup
   /* USER CODE BEGIN 1 */
   SVPWM_Init(&svpwm1, 10000);
   VHZ_Init(&vhz1, 1, 0.1, 10, 100);
