@@ -28,6 +28,11 @@ endif
 
 -include ../makefile.defs
 
+BUILD_ARTIFACT_NAME := MC_SVPWM
+BUILD_ARTIFACT_EXTENSION := elf
+BUILD_ARTIFACT_PREFIX := 
+BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME).$(BUILD_ARTIFACT_EXTENSION)
+
 # Add inputs and outputs from these tool invocations to the build variables 
 EXECUTABLES += \
 MC_SVPWM.elf \
@@ -43,14 +48,17 @@ MC_SVPWM.bin \
 
 
 # All Target
-all: MC_SVPWM.elf secondary-outputs
+all: main-build
+
+# Main-build Target
+main-build: MC_SVPWM.elf secondary-outputs
 
 dependents:
-	-cd X:/Documents/Hyperloop/MC_STM32/Release && $(MAKE) all
+	-cd /Users/shabana/MC_STM32/STM32L432KC/Release && $(MAKE) all
 
 # Tool invocations
-MC_SVPWM.elf: $(OBJS) $(USER_OBJS) X:/Documents/Hyperloop/MC_STM32/Release/MC_SVPWM.elf X:\Documents\Hyperloop\MC_STM32\STM32L432KCUX_FLASH.ld
-	arm-none-eabi-gcc -o "MC_SVPWM.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"X:\Documents\Hyperloop\MC_STM32\STM32L432KCUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="MC_SVPWM.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+MC_SVPWM.elf: $(OBJS) $(USER_OBJS) /Users/shabana/MC_STM32/STM32L432KC/Release/MC_SVPWM.elf /Users/shabana/MC_STM32/STM32L432KC/STM32L432KCUX_FLASH.ld
+	arm-none-eabi-gcc -o "MC_SVPWM.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/Users/shabana/MC_STM32/STM32L432KC/STM32L432KCUX_FLASH.ld" --specs=nosys.specs -Wl,-Map="MC_SVPWM.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -76,8 +84,15 @@ clean:
 
 secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST) $(OBJCOPY_BIN)
 
-.PHONY: all clean dependents
+fail-specified-linker-script-missing:
+	@echo 'Error: Cannot find the specified linker script. Check the linker settings in the build configuration.'
+	@exit 2
+
+warn-no-linker-script-specified:
+	@echo 'Warning: No linker script specified. Check the linker settings in the build configuration.'
+
+.PHONY: all clean dependents fail-specified-linker-script-missing warn-no-linker-script-specified
 .SECONDARY:
-X:/Documents/Hyperloop/MC_STM32/Release/MC_SVPWM.elf:
+/Users/shabana/MC_STM32/STM32L432KC/Release/MC_SVPWM.elf:
 
 -include ../makefile.targets

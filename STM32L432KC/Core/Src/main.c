@@ -47,13 +47,16 @@
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
 
+I2C_HandleTypeDef hi2c1;
+
 SPI_HandleTypeDef hspi1;
 
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim15;
 
 /* USER CODE BEGIN PV */
-
+static const uint8_t TMP102_ADDR = 0X48 << 1;
+static const uint8_t REG_TEMP = 0x00;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -63,6 +66,7 @@ static void MX_TIM1_Init(void);
 static void MX_TIM15_Init(void);
 static void MX_SPI1_Init(void);
 static void MX_ADC1_Init(void);
+static void MX_I2C1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -95,7 +99,8 @@ volatile uint8_t spi_recv_flag = 0;
   * @brief  The application entry point.
   * @retval int
   */
-int main(void){ //This is our main setup
+int main(void)
+{
   /* USER CODE BEGIN 1 */
   SVPWM_Init(&svpwm1, 10000);
   VHZ_Init(&vhz1, 1, 0.1, 10, 100);
@@ -108,6 +113,8 @@ int main(void){ //This is our main setup
   uint8_t addr;
   uint8_t wip;
   uint8_t state = 0;
+	HAL_StatusTypeDef ret;	//send	temp
+	uint8_t buf [12];		// store temp
 
 
   /* USER CODE END 1 */
@@ -137,10 +144,11 @@ int main(void){ //This is our main setup
   MX_TIM15_Init();
   MX_SPI1_Init();
   MX_ADC1_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
   // Chip select pin should default high
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_SET);
 
   // Uart print
   //uart_buf_len = sprintf(uart_buf, "SPI Test\r\n");
@@ -172,7 +180,45 @@ while(1){
 	HAL_ADC_Start(&hadc1);
 	HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
 	raw = HAL_ADC_GetValue(&hadc1);
-	pwrGood = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_7);
+	pwrGood = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_4);
+
+
+	buf [0] = REG_TEMP;//REQUEST TO READ
+		  ret = HAL_I2C_Master_Transmit(&hi2c1, TMP102_ADDR, buf, 1, HAL_MAX_DELAY);
+		  if (ret != HAL_OK)
+		  {
+			  	 strcpy ((char*)buf, "Error Tx\r\n");
+		  }
+		  else
+		  {
+			  //READ 2 bytes from the temperature register
+		      ret = HAL_I2C_Master_Receive(&hi2c1, TMP102_ADDR, buf, 2, HAL_MAX_DELAY);
+			  if (ret != HAL_OK)
+			  {
+				  	 strcpy ((char*)buf, "Error Tx\r\n");
+			  }
+			  else
+			  {
+				  //combine the bytes
+				  val = ((int16_t)buf[0]<<4) | (buf[1] >> 4);
+				  //convert to 2's complement, since temperature can be negative
+				  if  (val > 0x7FF)
+				  {
+					  val |= 0xF000;
+				  }
+				  // Convert to float temperature value (Celsius)
+				  temp_c = val * 0.0625;
+				  // Convert temperature to decimal format
+				  temp_c *= 100;
+				  sprintf ((char*)buf,
+			              "%u.%u C\r\n",
+						  ((unsigned int)temp_c/100),
+						  ((unsigned int)temp_c %100));
+			  }
+		  }
+
+
+
 	HAL_Delay(1000);
 	 /* switch(state)
 	      {
@@ -197,6 +243,8 @@ while(1){
 	          // Perform non-blocking write to SPI
 	          HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
 	          HAL_SPI_Transmit_IT(&hspi1, (uint8_t *)spi_buf, 12);
+
+			  //Getting board to compile for DRVH305
 
 	          // Go to next state: waiting for interrupt flag
 	          state += 1;
@@ -352,7 +400,8 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_I2C1|RCC_PERIPHCLK_ADC;
+  PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_PCLK1;
   PeriphClkInit.AdcClockSelection = RCC_ADCCLKSOURCE_PLLSAI1;
   PeriphClkInit.PLLSAI1.PLLSAI1Source = RCC_PLLSOURCE_HSI;
   PeriphClkInit.PLLSAI1.PLLSAI1M = 1;
@@ -426,6 +475,52 @@ static void MX_ADC1_Init(void)
   /* USER CODE BEGIN ADC1_Init 2 */
 
   /* USER CODE END ADC1_Init 2 */
+
+}
+
+/**
+  * @brief I2C1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C1_Init(void)
+{
+
+  /* USER CODE BEGIN I2C1_Init 0 */
+
+  /* USER CODE END I2C1_Init 0 */
+
+  /* USER CODE BEGIN I2C1_Init 1 */
+
+  /* USER CODE END I2C1_Init 1 */
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.Timing = 0x00404C74;
+  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Analogue filter
+  */
+  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Digital filter
+  */
+  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C1_Init 2 */
+
+  /* USER CODE END I2C1_Init 2 */
 
 }
 
@@ -628,7 +723,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : PA0 */
   GPIO_InitStruct.Pin = GPIO_PIN_0;
@@ -651,15 +746,15 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF3_USART2;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PB6 */
-  GPIO_InitStruct.Pin = GPIO_PIN_6;
+  /*Configure GPIO pin : PB3 */
+  GPIO_InitStruct.Pin = GPIO_PIN_3;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PB7 */
-  GPIO_InitStruct.Pin = GPIO_PIN_7;
+  /*Configure GPIO pin : PB4 */
+  GPIO_InitStruct.Pin = GPIO_PIN_4;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
@@ -710,7 +805,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 void HAL_SPI_TxCpltCallback (SPI_HandleTypeDef * hspi)
 {
   // Set CS pin to high and raise flag
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_SET);
   spi_xmit_flag = 1;
 }
 
@@ -718,10 +813,20 @@ void HAL_SPI_TxCpltCallback (SPI_HandleTypeDef * hspi)
 void HAL_SPI_RxCpltCallback (SPI_HandleTypeDef * hspi)
 {
   // Set CS pin to high and raise flag
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_SET);
   spi_recv_flag = 1;
 }
 
+double adc_voltage_conversion (uint16_t raw_a)
+{
+	return raw_a / ADC_VOLTAGE_CONVERSION;
+}
+
+double current_sensing (uint16_t raw_a)
+{
+	raw_a = adc_voltage_conversion (raw_a);
+	return THERMISTOR_RESISTANCE * raw_a / (INPUT_VOLTAGE - raw_a);
+}
 /* USER CODE END 4 */
 
 /**

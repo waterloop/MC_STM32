@@ -37,13 +37,13 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING
  16 .debug_macro  00023166  00000000  00000000  000384d0  2**0
                   CONTENTS, READONLY, DEBUGGING
- 17 .debug_line   0000e808  00000000  00000000  0005b636  2**0
+ 17 .debug_line   0000e23e  00000000  00000000  0005b636  2**0
                   CONTENTS, READONLY, DEBUGGING
- 18 .debug_str    000d9b69  00000000  00000000  00069e3e  2**0
+ 18 .debug_str    000d9b93  00000000  00000000  00069874  2**0
                   CONTENTS, READONLY, DEBUGGING
- 19 .comment      0000007b  00000000  00000000  001439a7  2**0
+ 19 .comment      0000007b  00000000  00000000  00143407  2**0
                   CONTENTS, READONLY
- 20 .debug_frame  00004bf0  00000000  00000000  00143a24  2**2
+ 20 .debug_frame  00004bf0  00000000  00000000  00143484  2**2
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -137,9 +137,6 @@ Disassembly of section .text:
  800026e:	bf00      	nop
 
 08000270 <PIDController_Init>:
-#include "PID.h"
-
-void PIDController_Init(PIDController *pid, float Kp, float Ki, float LimMin, float LimMax, float LimMinInt, float LimMaxInt, float T) {
  8000270:	b480      	push	{r7}
  8000272:	b089      	sub	sp, #36	; 0x24
  8000274:	af00      	add	r7, sp, #0
@@ -151,44 +148,33 @@ void PIDController_Init(PIDController *pid, float Kp, float Ki, float LimMin, fl
  8000288:	ed87 2a02 	vstr	s4, [r7, #8]
  800028c:	edc7 2a01 	vstr	s5, [r7, #4]
  8000290:	ed87 3a00 	vstr	s6, [r7]
-	/* Clear controller variables */
-	pid->Integrator = 0.0f;
  8000294:	69fb      	ldr	r3, [r7, #28]
  8000296:	f04f 0200 	mov.w	r2, #0
  800029a:	61da      	str	r2, [r3, #28]
-	pid->PrevError  = 0.0f;
  800029c:	69fb      	ldr	r3, [r7, #28]
  800029e:	f04f 0200 	mov.w	r2, #0
  80002a2:	621a      	str	r2, [r3, #32]
-	pid->Out = 0.0f;
  80002a4:	69fb      	ldr	r3, [r7, #28]
  80002a6:	f04f 0200 	mov.w	r2, #0
  80002aa:	625a      	str	r2, [r3, #36]	; 0x24
-	pid->Kp = Kp;
  80002ac:	69fb      	ldr	r3, [r7, #28]
  80002ae:	69ba      	ldr	r2, [r7, #24]
  80002b0:	601a      	str	r2, [r3, #0]
-	pid->Ki = Ki;
  80002b2:	69fb      	ldr	r3, [r7, #28]
  80002b4:	697a      	ldr	r2, [r7, #20]
  80002b6:	605a      	str	r2, [r3, #4]
-	pid->LimMin = LimMin;
  80002b8:	69fb      	ldr	r3, [r7, #28]
  80002ba:	693a      	ldr	r2, [r7, #16]
  80002bc:	609a      	str	r2, [r3, #8]
-	pid->LimMax = LimMax;
  80002be:	69fb      	ldr	r3, [r7, #28]
  80002c0:	68fa      	ldr	r2, [r7, #12]
  80002c2:	60da      	str	r2, [r3, #12]
-	pid->LimMinInt = LimMinInt;
  80002c4:	69fb      	ldr	r3, [r7, #28]
  80002c6:	68ba      	ldr	r2, [r7, #8]
  80002c8:	611a      	str	r2, [r3, #16]
-	pid->LimMaxInt = LimMaxInt;
  80002ca:	69fb      	ldr	r3, [r7, #28]
  80002cc:	687a      	ldr	r2, [r7, #4]
  80002ce:	615a      	str	r2, [r3, #20]
-}
  80002d0:	bf00      	nop
  80002d2:	3724      	adds	r7, #36	; 0x24
  80002d4:	46bd      	mov	sp, r7
@@ -673,12 +659,6 @@ void SVPWM_Update(SVPWM *svm, VHZPROFILE *vhz, TIM_HandleTypeDef *htim) {
  8000750:	40012c00 	.word	0x40012c00
 
 08000754 <VHZ_Init>:
- */
-
-#include "VHZ.h"
-#include "math.h"
-
-void VHZ_Init(VHZPROFILE *vhz, float FreqMin, float FreqRated, float VoltMin, float VoltRated) {
  8000754:	b480      	push	{r7}
  8000756:	b087      	sub	sp, #28
  8000758:	af00      	add	r7, sp, #0
@@ -687,23 +667,18 @@ void VHZ_Init(VHZPROFILE *vhz, float FreqMin, float FreqRated, float VoltMin, fl
  8000760:	edc7 0a03 	vstr	s1, [r7, #12]
  8000764:	ed87 1a02 	vstr	s2, [r7, #8]
  8000768:	edc7 1a01 	vstr	s3, [r7, #4]
-	vhz->FreqMin = FreqMin;
  800076c:	697b      	ldr	r3, [r7, #20]
  800076e:	693a      	ldr	r2, [r7, #16]
  8000770:	601a      	str	r2, [r3, #0]
-	vhz->FreqRated = FreqRated;
  8000772:	697b      	ldr	r3, [r7, #20]
  8000774:	68fa      	ldr	r2, [r7, #12]
  8000776:	605a      	str	r2, [r3, #4]
-	vhz->VoltMin = VoltMin;
  8000778:	697b      	ldr	r3, [r7, #20]
  800077a:	68ba      	ldr	r2, [r7, #8]
  800077c:	609a      	str	r2, [r3, #8]
-	vhz->VoltRated = VoltRated;
  800077e:	697b      	ldr	r3, [r7, #20]
  8000780:	687a      	ldr	r2, [r7, #4]
  8000782:	60da      	str	r2, [r3, #12]
-	vhz->VfSlope = (VoltRated - VoltMin) / (FreqRated - FreqMin);
  8000784:	ed97 7a01 	vldr	s14, [r7, #4]
  8000788:	edd7 7a02 	vldr	s15, [r7, #8]
  800078c:	ee77 6a67 	vsub.f32	s13, s14, s15
@@ -713,15 +688,12 @@ void VHZ_Init(VHZPROFILE *vhz, float FreqMin, float FreqRated, float VoltMin, fl
  800079c:	eec6 7a87 	vdiv.f32	s15, s13, s14
  80007a0:	697b      	ldr	r3, [r7, #20]
  80007a2:	edc3 7a04 	vstr	s15, [r3, #16]
-	vhz->Volt = 0;
  80007a6:	697b      	ldr	r3, [r7, #20]
  80007a8:	f04f 0200 	mov.w	r2, #0
  80007ac:	615a      	str	r2, [r3, #20]
-	vhz->Freq = FreqMin;
  80007ae:	697b      	ldr	r3, [r7, #20]
  80007b0:	693a      	ldr	r2, [r7, #16]
  80007b2:	619a      	str	r2, [r3, #24]
-}
  80007b4:	bf00      	nop
  80007b6:	371c      	adds	r7, #28
  80007b8:	46bd      	mov	sp, r7
@@ -729,13 +701,10 @@ void VHZ_Init(VHZPROFILE *vhz, float FreqMin, float FreqRated, float VoltMin, fl
  80007be:	4770      	bx	lr
 
 080007c0 <VHZ_Update>:
-
-void VHZ_Update(VHZPROFILE *vhz){
  80007c0:	b480      	push	{r7}
  80007c2:	b083      	sub	sp, #12
  80007c4:	af00      	add	r7, sp, #0
  80007c6:	6078      	str	r0, [r7, #4]
-	if (vhz->Freq <= vhz->FreqMin){
  80007c8:	687b      	ldr	r3, [r7, #4]
  80007ca:	ed93 7a06 	vldr	s14, [r3, #24]
  80007ce:	687b      	ldr	r3, [r7, #4]
@@ -743,19 +712,11 @@ void VHZ_Update(VHZPROFILE *vhz){
  80007d4:	eeb4 7ae7 	vcmpe.f32	s14, s15
  80007d8:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
  80007dc:	d804      	bhi.n	80007e8 <VHZ_Update+0x28>
-		vhz->Volt = vhz->VoltMin;
  80007de:	687b      	ldr	r3, [r7, #4]
  80007e0:	689a      	ldr	r2, [r3, #8]
  80007e2:	687b      	ldr	r3, [r7, #4]
  80007e4:	615a      	str	r2, [r3, #20]
-    }
-
-	else if ((vhz->Freq > vhz->FreqRated)){
-       	vhz->Volt = vhz->VoltRated;
-    }
-}
  80007e6:	e03b      	b.n	8000860 <VHZ_Update+0xa0>
-	else if ((vhz->Freq > vhz->FreqMin) && (vhz->Freq <= vhz->FreqRated)){
  80007e8:	687b      	ldr	r3, [r7, #4]
  80007ea:	ed93 7a06 	vldr	s14, [r3, #24]
  80007ee:	687b      	ldr	r3, [r7, #4]
@@ -770,7 +731,6 @@ void VHZ_Update(VHZPROFILE *vhz){
  800080a:	eeb4 7ae7 	vcmpe.f32	s14, s15
  800080e:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
  8000812:	d815      	bhi.n	8000840 <VHZ_Update+0x80>
-		vhz->Volt = vhz->VoltMin + vhz->VfSlope * (vhz->Freq - vhz->FreqMin);
  8000814:	687b      	ldr	r3, [r7, #4]
  8000816:	ed93 7a02 	vldr	s14, [r3, #8]
  800081a:	687b      	ldr	r3, [r7, #4]
@@ -784,9 +744,7 @@ void VHZ_Update(VHZPROFILE *vhz){
  8000834:	ee77 7a27 	vadd.f32	s15, s14, s15
  8000838:	687b      	ldr	r3, [r7, #4]
  800083a:	edc3 7a05 	vstr	s15, [r3, #20]
-}
  800083e:	e00f      	b.n	8000860 <VHZ_Update+0xa0>
-	else if ((vhz->Freq > vhz->FreqRated)){
  8000840:	687b      	ldr	r3, [r7, #4]
  8000842:	ed93 7a06 	vldr	s14, [r3, #24]
  8000846:	687b      	ldr	r3, [r7, #4]
@@ -794,14 +752,11 @@ void VHZ_Update(VHZPROFILE *vhz){
  800084c:	eeb4 7ae7 	vcmpe.f32	s14, s15
  8000850:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
  8000854:	dc00      	bgt.n	8000858 <VHZ_Update+0x98>
-}
  8000856:	e003      	b.n	8000860 <VHZ_Update+0xa0>
-       	vhz->Volt = vhz->VoltRated;
  8000858:	687b      	ldr	r3, [r7, #4]
  800085a:	68da      	ldr	r2, [r3, #12]
  800085c:	687b      	ldr	r3, [r7, #4]
  800085e:	615a      	str	r2, [r3, #20]
-}
  8000860:	bf00      	nop
  8000862:	370c      	adds	r7, #12
  8000864:	46bd      	mov	sp, r7
@@ -809,12 +764,12 @@ void VHZ_Update(VHZPROFILE *vhz){
  800086a:	4770      	bx	lr
 
 0800086c <main>:
+
 /**
   * @brief  The application entry point.
   * @retval int
   */
-int main(void)
-{
+int main(void){ //This is our main setup
  800086c:	b580      	push	{r7, lr}
  800086e:	b094      	sub	sp, #80	; 0x50
  8000870:	af00      	add	r7, sp, #0
@@ -942,7 +897,7 @@ while(1){
  800092e:	481b      	ldr	r0, [pc, #108]	; (800099c <main+0x130>)
  8000930:	f001 f91e 	bl	8001b70 <HAL_ADC_Start>
 	HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
- 8000934:	f04f 31ff 	mov.w	r1, #4294967295
+ 8000934:	f04f 31ff 	mov.w	r1, #4294967295	; 0xffffffff
  8000938:	4818      	ldr	r0, [pc, #96]	; (800099c <main+0x130>)
  800093a:	f001 f97c 	bl	8001c36 <HAL_ADC_PollForConversion>
 	raw = HAL_ADC_GetValue(&hadc1);
@@ -2684,44 +2639,23 @@ void SPI1_IRQHandler(void)
  80012f8:	200001e8 	.word	0x200001e8
 
 080012fc <_sbrk>:
- *
- * @param incr Memory size
- * @return Pointer to allocated memory
- */
-void *_sbrk(ptrdiff_t incr)
-{
  80012fc:	b580      	push	{r7, lr}
  80012fe:	b086      	sub	sp, #24
  8001300:	af00      	add	r7, sp, #0
  8001302:	6078      	str	r0, [r7, #4]
-  extern uint8_t _end; /* Symbol defined in the linker script */
-  extern uint8_t _estack; /* Symbol defined in the linker script */
-  extern uint32_t _Min_Stack_Size; /* Symbol defined in the linker script */
-  const uint32_t stack_limit = (uint32_t)&_estack - (uint32_t)&_Min_Stack_Size;
  8001304:	4a14      	ldr	r2, [pc, #80]	; (8001358 <_sbrk+0x5c>)
  8001306:	4b15      	ldr	r3, [pc, #84]	; (800135c <_sbrk+0x60>)
  8001308:	1ad3      	subs	r3, r2, r3
  800130a:	617b      	str	r3, [r7, #20]
-  const uint8_t *max_heap = (uint8_t *)stack_limit;
  800130c:	697b      	ldr	r3, [r7, #20]
  800130e:	613b      	str	r3, [r7, #16]
-  uint8_t *prev_heap_end;
-
-  /* Initalize heap end at first call */
-  if (NULL == __sbrk_heap_end)
  8001310:	4b13      	ldr	r3, [pc, #76]	; (8001360 <_sbrk+0x64>)
  8001312:	681b      	ldr	r3, [r3, #0]
  8001314:	2b00      	cmp	r3, #0
  8001316:	d102      	bne.n	800131e <_sbrk+0x22>
-  {
-    __sbrk_heap_end = &_end;
  8001318:	4b11      	ldr	r3, [pc, #68]	; (8001360 <_sbrk+0x64>)
  800131a:	4a12      	ldr	r2, [pc, #72]	; (8001364 <_sbrk+0x68>)
  800131c:	601a      	str	r2, [r3, #0]
-  }
-
-  /* Protect heap from growing into the reserved MSP stack */
-  if (__sbrk_heap_end + incr > max_heap)
  800131e:	4b10      	ldr	r3, [pc, #64]	; (8001360 <_sbrk+0x64>)
  8001320:	681a      	ldr	r2, [r3, #0]
  8001322:	687b      	ldr	r3, [r7, #4]
@@ -2729,32 +2663,22 @@ void *_sbrk(ptrdiff_t incr)
  8001326:	693a      	ldr	r2, [r7, #16]
  8001328:	429a      	cmp	r2, r3
  800132a:	d207      	bcs.n	800133c <_sbrk+0x40>
-  {
-    errno = ENOMEM;
  800132c:	f004 fa5a 	bl	80057e4 <__errno>
  8001330:	4602      	mov	r2, r0
  8001332:	230c      	movs	r3, #12
  8001334:	6013      	str	r3, [r2, #0]
-    return (void *)-1;
- 8001336:	f04f 33ff 	mov.w	r3, #4294967295
+ 8001336:	f04f 33ff 	mov.w	r3, #4294967295	; 0xffffffff
  800133a:	e009      	b.n	8001350 <_sbrk+0x54>
-  }
-
-  prev_heap_end = __sbrk_heap_end;
  800133c:	4b08      	ldr	r3, [pc, #32]	; (8001360 <_sbrk+0x64>)
  800133e:	681b      	ldr	r3, [r3, #0]
  8001340:	60fb      	str	r3, [r7, #12]
-  __sbrk_heap_end += incr;
  8001342:	4b07      	ldr	r3, [pc, #28]	; (8001360 <_sbrk+0x64>)
  8001344:	681a      	ldr	r2, [r3, #0]
  8001346:	687b      	ldr	r3, [r7, #4]
  8001348:	4413      	add	r3, r2
  800134a:	4a05      	ldr	r2, [pc, #20]	; (8001360 <_sbrk+0x64>)
  800134c:	6013      	str	r3, [r2, #0]
-
-  return (void *)prev_heap_end;
  800134e:	68fb      	ldr	r3, [r7, #12]
-}
  8001350:	4618      	mov	r0, r3
  8001352:	3718      	adds	r7, #24
  8001354:	46bd      	mov	sp, r7
@@ -2846,104 +2770,47 @@ void SystemInit(void)
  80013d0:	40021000 	.word	0x40021000
 
 080013d4 <Reset_Handler>:
-
-    .section	.text.Reset_Handler
-	.weak	Reset_Handler
-	.type	Reset_Handler, %function
-Reset_Handler:
-  ldr   sp, =_estack    /* Set stack pointer */
  80013d4:	f8df d034 	ldr.w	sp, [pc, #52]	; 800140c <LoopForever+0x2>
-
-/* Call the clock system initialization function.*/
-    bl  SystemInit
  80013d8:	f7ff ffc6 	bl	8001368 <SystemInit>
-
-/* Copy the data segment initializers from flash to SRAM */
-  movs	r1, #0
  80013dc:	2100      	movs	r1, #0
-  b	LoopCopyDataInit
  80013de:	e003      	b.n	80013e8 <LoopCopyDataInit>
 
 080013e0 <CopyDataInit>:
-
-CopyDataInit:
-	ldr	r3, =_sidata
  80013e0:	4b0b      	ldr	r3, [pc, #44]	; (8001410 <LoopForever+0x6>)
-	ldr	r3, [r3, r1]
  80013e2:	585b      	ldr	r3, [r3, r1]
-	str	r3, [r0, r1]
  80013e4:	5043      	str	r3, [r0, r1]
-	adds	r1, r1, #4
  80013e6:	3104      	adds	r1, #4
 
 080013e8 <LoopCopyDataInit>:
-
-LoopCopyDataInit:
-	ldr	r0, =_sdata
  80013e8:	480a      	ldr	r0, [pc, #40]	; (8001414 <LoopForever+0xa>)
-	ldr	r3, =_edata
  80013ea:	4b0b      	ldr	r3, [pc, #44]	; (8001418 <LoopForever+0xe>)
-	adds	r2, r0, r1
  80013ec:	1842      	adds	r2, r0, r1
-	cmp	r2, r3
  80013ee:	429a      	cmp	r2, r3
-	bcc	CopyDataInit
  80013f0:	d3f6      	bcc.n	80013e0 <CopyDataInit>
-	ldr	r2, =_sbss
  80013f2:	4a0a      	ldr	r2, [pc, #40]	; (800141c <LoopForever+0x12>)
-	b	LoopFillZerobss
  80013f4:	e002      	b.n	80013fc <LoopFillZerobss>
 
 080013f6 <FillZerobss>:
-/* Zero fill the bss segment. */
-FillZerobss:
-	movs	r3, #0
  80013f6:	2300      	movs	r3, #0
-	str	r3, [r2], #4
  80013f8:	f842 3b04 	str.w	r3, [r2], #4
 
 080013fc <LoopFillZerobss>:
-
-LoopFillZerobss:
-	ldr	r3, = _ebss
  80013fc:	4b08      	ldr	r3, [pc, #32]	; (8001420 <LoopForever+0x16>)
-	cmp	r2, r3
  80013fe:	429a      	cmp	r2, r3
-	bcc	FillZerobss
  8001400:	d3f9      	bcc.n	80013f6 <FillZerobss>
-
-/* Call static constructors */
-    bl __libc_init_array
  8001402:	f004 f9f5 	bl	80057f0 <__libc_init_array>
-/* Call the application's entry point.*/
-	bl	main
  8001406:	f7ff fa31 	bl	800086c <main>
 
 0800140a <LoopForever>:
-
-LoopForever:
-    b LoopForever
  800140a:	e7fe      	b.n	800140a <LoopForever>
-  ldr   sp, =_estack    /* Set stack pointer */
  800140c:	20010000 	.word	0x20010000
-	ldr	r3, =_sidata
  8001410:	08006f58 	.word	0x08006f58
-	ldr	r0, =_sdata
  8001414:	20000000 	.word	0x20000000
-	ldr	r3, =_edata
  8001418:	20000070 	.word	0x20000070
-	ldr	r2, =_sbss
  800141c:	20000070 	.word	0x20000070
-	ldr	r3, = _ebss
  8001420:	20000290 	.word	0x20000290
 
 08001424 <ADC1_IRQHandler>:
- * @retval : None
-*/
-    .section	.text.Default_Handler,"ax",%progbits
-Default_Handler:
-Infinite_Loop:
-	b	Infinite_Loop
  8001424:	e7fe      	b.n	8001424 <ADC1_IRQHandler>
 
 08001426 <HAL_Init>:
@@ -3045,7 +2912,7 @@ __weak HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
         HAL_NVIC_SetPriority(SysTick_IRQn, TickPriority, 0U);
  8001494:	2200      	movs	r2, #0
  8001496:	6879      	ldr	r1, [r7, #4]
- 8001498:	f04f 30ff 	mov.w	r0, #4294967295
+ 8001498:	f04f 30ff 	mov.w	r0, #4294967295	; 0xffffffff
  800149c:	f001 f973 	bl	8002786 <HAL_NVIC_SetPriority>
         uwTickPrio = TickPriority;
  80014a0:	4a0a      	ldr	r2, [pc, #40]	; (80014cc <HAL_InitTick+0x74>)
@@ -3157,7 +3024,7 @@ __weak void HAL_Delay(uint32_t Delay)
   /* Add a period to guaranty minimum wait */
   if (wait < HAL_MAX_DELAY)
  8001522:	68fb      	ldr	r3, [r7, #12]
- 8001524:	f1b3 3fff 	cmp.w	r3, #4294967295
+ 8001524:	f1b3 3fff 	cmp.w	r3, #4294967295	; 0xffffffff
  8001528:	d005      	beq.n	8001536 <HAL_Delay+0x26>
   {
     wait += (uint32_t)uwTickFreq;
@@ -4542,7 +4409,7 @@ HAL_StatusTypeDef HAL_ADC_PollForConversion(ADC_HandleTypeDef *hadc, uint32_t Ti
     /* Check if timeout is disabled (set to infinite wait) */
     if (Timeout != HAL_MAX_DELAY)
  8001c78:	683b      	ldr	r3, [r7, #0]
- 8001c7a:	f1b3 3fff 	cmp.w	r3, #4294967295
+ 8001c7a:	f1b3 3fff 	cmp.w	r3, #4294967295	; 0xffffffff
  8001c7e:	d016      	beq.n	8001cae <HAL_ADC_PollForConversion+0x78>
     {
       if (((HAL_GetTick() - tickstart) > Timeout) || (Timeout == 0UL))
@@ -6145,7 +6012,7 @@ __STATIC_INLINE uint32_t NVIC_EncodePriority (uint32_t PriorityGroup, uint32_t P
 
   return (
            ((PreemptPriority & (uint32_t)((1UL << (PreemptPriorityBits)) - 1UL)) << SubPriorityBits) |
- 80026f8:	f04f 32ff 	mov.w	r2, #4294967295
+ 80026f8:	f04f 32ff 	mov.w	r2, #4294967295	; 0xffffffff
  80026fc:	69bb      	ldr	r3, [r7, #24]
  80026fe:	fa02 f303 	lsl.w	r3, r2, r3
  8002702:	43da      	mvns	r2, r3
@@ -6154,7 +6021,7 @@ __STATIC_INLINE uint32_t NVIC_EncodePriority (uint32_t PriorityGroup, uint32_t P
  8002708:	697b      	ldr	r3, [r7, #20]
  800270a:	409a      	lsls	r2, r3
            ((SubPriority     & (uint32_t)((1UL << (SubPriorityBits    )) - 1UL)))
- 800270c:	f04f 31ff 	mov.w	r1, #4294967295
+ 800270c:	f04f 31ff 	mov.w	r1, #4294967295	; 0xffffffff
  8002710:	697b      	ldr	r3, [r7, #20]
  8002712:	fa01 f303 	lsl.w	r3, r1, r3
  8002716:	43d9      	mvns	r1, r3
@@ -6200,7 +6067,7 @@ __STATIC_INLINE uint32_t SysTick_Config(uint32_t ticks)
  8002748:	6053      	str	r3, [r2, #4]
   NVIC_SetPriority (SysTick_IRQn, (1UL << __NVIC_PRIO_BITS) - 1UL); /* set Priority for Systick Interrupt */
  800274a:	210f      	movs	r1, #15
- 800274c:	f04f 30ff 	mov.w	r0, #4294967295
+ 800274c:	f04f 30ff 	mov.w	r0, #4294967295	; 0xffffffff
  8002750:	f7ff ff8e 	bl	8002670 <__NVIC_SetPriority>
   SysTick->VAL   = 0UL;                                             /* Load the SysTick Counter Value */
  8002754:	4b05      	ldr	r3, [pc, #20]	; (800276c <SysTick_Config+0x40>)
@@ -15072,7 +14939,7 @@ static void TIM_CCxNChannelCmd(TIM_TypeDef *TIMx, uint32_t Channel, uint32_t Cha
  80058d4:	89a3      	ldrh	r3, [r4, #12]
  80058d6:	f043 0340 	orr.w	r3, r3, #64	; 0x40
  80058da:	81a3      	strh	r3, [r4, #12]
- 80058dc:	f04f 30ff 	mov.w	r0, #4294967295
+ 80058dc:	f04f 30ff 	mov.w	r0, #4294967295	; 0xffffffff
  80058e0:	e8bd 87f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, sl, pc}
  80058e4:	463a      	mov	r2, r7
  80058e6:	6921      	ldr	r1, [r4, #16]
@@ -15132,7 +14999,7 @@ static void TIM_CCxNChannelCmd(TIM_TypeDef *TIMx, uint32_t Channel, uint32_t Cha
  800595e:	b928      	cbnz	r0, 800596c <_svfiprintf_r+0x30>
  8005960:	230c      	movs	r3, #12
  8005962:	f8c8 3000 	str.w	r3, [r8]
- 8005966:	f04f 30ff 	mov.w	r0, #4294967295
+ 8005966:	f04f 30ff 	mov.w	r0, #4294967295	; 0xffffffff
  800596a:	e0c8      	b.n	8005afe <_svfiprintf_r+0x1c2>
  800596c:	2340      	movs	r3, #64	; 0x40
  800596e:	6163      	str	r3, [r4, #20]
@@ -15166,7 +15033,7 @@ static void TIM_CCxNChannelCmd(TIM_TypeDef *TIMx, uint32_t Channel, uint32_t Cha
  80059b4:	2b00      	cmp	r3, #0
  80059b6:	f000 809d 	beq.w	8005af4 <_svfiprintf_r+0x1b8>
  80059ba:	2300      	movs	r3, #0
- 80059bc:	f04f 32ff 	mov.w	r2, #4294967295
+ 80059bc:	f04f 32ff 	mov.w	r2, #4294967295	; 0xffffffff
  80059c0:	e9cd 2305 	strd	r2, r3, [sp, #20]
  80059c4:	9304      	str	r3, [sp, #16]
  80059c6:	9307      	str	r3, [sp, #28]
@@ -15234,7 +15101,7 @@ static void TIM_CCxNChannelCmd(TIM_TypeDef *TIMx, uint32_t Channel, uint32_t Cha
  8005a52:	9203      	str	r2, [sp, #12]
  8005a54:	2b00      	cmp	r3, #0
  8005a56:	bfb8      	it	lt
- 8005a58:	f04f 33ff 	movlt.w	r3, #4294967295
+ 8005a58:	f04f 33ff 	movlt.w	r3, #4294967295	; 0xffffffff
  8005a5c:	3702      	adds	r7, #2
  8005a5e:	9305      	str	r3, [sp, #20]
  8005a60:	4d2e      	ldr	r5, [pc, #184]	; (8005b1c <_svfiprintf_r+0x1e0>)
@@ -15298,7 +15165,7 @@ static void TIM_CCxNChannelCmd(TIM_TypeDef *TIMx, uint32_t Channel, uint32_t Cha
  8005ae4:	a904      	add	r1, sp, #16
  8005ae6:	4640      	mov	r0, r8
  8005ae8:	f3af 8000 	nop.w
- 8005aec:	f1b0 3fff 	cmp.w	r0, #4294967295
+ 8005aec:	f1b0 3fff 	cmp.w	r0, #4294967295	; 0xffffffff
  8005af0:	4681      	mov	r9, r0
  8005af2:	d1d6      	bne.n	8005aa2 <_svfiprintf_r+0x166>
  8005af4:	89a3      	ldrh	r3, [r4, #12]
@@ -15396,7 +15263,7 @@ static void TIM_CCxNChannelCmd(TIM_TypeDef *TIMx, uint32_t Channel, uint32_t Cha
  8005bd8:	47c0      	blx	r8
  8005bda:	3001      	adds	r0, #1
  8005bdc:	d103      	bne.n	8005be6 <_printf_common+0xba>
- 8005bde:	f04f 30ff 	mov.w	r0, #4294967295
+ 8005bde:	f04f 30ff 	mov.w	r0, #4294967295	; 0xffffffff
  8005be2:	e8bd 87f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, sl, pc}
  8005be6:	3501      	adds	r5, #1
  8005be8:	e7c3      	b.n	8005b72 <_printf_common+0x46>
@@ -15536,7 +15403,7 @@ static void TIM_CCxNChannelCmd(TIM_TypeDef *TIMx, uint32_t Channel, uint32_t Cha
  8005d1e:	bfde      	ittt	le
  8005d20:	2330      	movle	r3, #48	; 0x30
  8005d22:	f805 3c01 	strble.w	r3, [r5, #-1]
- 8005d26:	f105 35ff 	addle.w	r5, r5, #4294967295
+ 8005d26:	f105 35ff 	addle.w	r5, r5, #4294967295	; 0xffffffff
  8005d2a:	ebac 0305 	sub.w	r3, ip, r5
  8005d2e:	6123      	str	r3, [r4, #16]
  8005d30:	f8cd 8000 	str.w	r8, [sp]
@@ -15547,7 +15414,7 @@ static void TIM_CCxNChannelCmd(TIM_TypeDef *TIMx, uint32_t Channel, uint32_t Cha
  8005d3c:	f7ff fef6 	bl	8005b2c <_printf_common>
  8005d40:	3001      	adds	r0, #1
  8005d42:	d14d      	bne.n	8005de0 <_printf_i+0x1c8>
- 8005d44:	f04f 30ff 	mov.w	r0, #4294967295
+ 8005d44:	f04f 30ff 	mov.w	r0, #4294967295	; 0xffffffff
  8005d48:	b005      	add	sp, #20
  8005d4a:	e8bd 83f0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, pc}
  8005d4e:	4839      	ldr	r0, [pc, #228]	; (8005e34 <_printf_i+0x21c>)
@@ -16003,7 +15870,7 @@ static void TIM_CCxNChannelCmd(TIM_TypeDef *TIMx, uint32_t Channel, uint32_t Cha
  800615e:	edc0 6a00 	vstr	s13, [r0]
  8006162:	ee77 7a87 	vadd.f32	s15, s15, s14
  8006166:	edc0 7a01 	vstr	s15, [r0, #4]
- 800616a:	f04f 30ff 	mov.w	r0, #4294967295
+ 800616a:	f04f 30ff 	mov.w	r0, #4294967295	; 0xffffffff
  800616e:	e7e4      	b.n	800613a <__ieee754_rem_pio2f+0x62>
  8006170:	4b68      	ldr	r3, [pc, #416]	; (8006314 <__ieee754_rem_pio2f+0x23c>)
  8006172:	429c      	cmp	r4, r3
@@ -16210,7 +16077,7 @@ static void TIM_CCxNChannelCmd(TIM_TypeDef *TIMx, uint32_t Channel, uint32_t Cha
  800640c:	2308      	movs	r3, #8
  800640e:	fb91 f1f3 	sdiv	r1, r1, r3
  8006412:	ea21 71e1 	bic.w	r1, r1, r1, asr #31
- 8006416:	f10b 3aff 	add.w	sl, fp, #4294967295
+ 8006416:	f10b 3aff 	add.w	sl, fp, #4294967295	; 0xffffffff
  800641a:	1c4c      	adds	r4, r1, #1
  800641c:	eba2 04c4 	sub.w	r4, r2, r4, lsl #3
  8006420:	eba1 050a 	sub.w	r5, r1, sl
