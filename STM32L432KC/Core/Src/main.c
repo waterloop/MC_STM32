@@ -29,6 +29,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <DEFINES.H>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -116,7 +117,9 @@ int main(void)
   uint8_t state = 0;
 	HAL_StatusTypeDef ret;	//send	temp
 	uint8_t buf [12];		// store temp
-
+	int current;
+	  int16_t val;
+	  float temp_c;
 
   /* USER CODE END 1 */
 
@@ -183,7 +186,12 @@ while(1){
 	raw = HAL_ADC_GetValue(&hadc1);
 	pwrGood = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_4);
 
+	//Current sensing start
+	current = current_sensing (adc_voltage_conversion(raw));
+	//Current sensing end
 
+
+	// Temperature sensing beginning
 	buf [0] = REG_TEMP;//REQUEST TO READ
 		  ret = HAL_I2C_Master_Transmit(&hi2c1, TMP102_ADDR, buf, 1, HAL_MAX_DELAY);
 		  if (ret != HAL_OK)
@@ -217,6 +225,9 @@ while(1){
 						  ((unsigned int)temp_c %100));
 			  }
 		  }
+		  //HAL_UART_Transmit(&huart2, buf, strlen((char*)buf), HAL_MAX_DELAY);
+
+		// Temperature sensing end
 
 
 
@@ -818,16 +829,16 @@ void HAL_SPI_RxCpltCallback (SPI_HandleTypeDef * hspi)
   spi_recv_flag = 1;
 }
 
-double adc_voltage_conversion (uint16_t raw_a)
+unsigned int adc_voltage_conversion (uint16_t raw_a)
 {
-	return raw_a / ADC_VOLTAGE_CONVERSION;
+	return (unsigned int) (raw_a / ADC_VOLTAGE_CONVERSION);
 }
 
-double current_sensing (uint16_t raw_a)
+unsigned int current_sensing (uint16_t raw_a)
 {
 	raw_a = adc_voltage_conversion (raw_a);
 	if (raw_a != INPUT_VOLTAGE)
-		return THERMISTOR_RESISTANCE * raw_a / (INPUT_VOLTAGE - raw_a);
+		return (unsigned int) (THERMISTOR_RESISTANCE * raw_a / (INPUT_VOLTAGE - raw_a));
 	else
 		return raw_a;
 }
