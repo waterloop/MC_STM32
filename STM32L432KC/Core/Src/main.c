@@ -28,6 +28,7 @@
 #include "PID.h"
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -825,7 +826,10 @@ double adc_voltage_conversion (uint16_t raw_a)
 double current_sensing (uint16_t raw_a)
 {
 	raw_a = adc_voltage_conversion (raw_a);
-	return THERMISTOR_RESISTANCE * raw_a / (INPUT_VOLTAGE - raw_a);
+	if (raw_a != INPUT_VOLTAGE)
+		return THERMISTOR_RESISTANCE * raw_a / (INPUT_VOLTAGE - raw_a);
+	else
+		return raw_a;
 }
 /* USER CODE END 4 */
 
