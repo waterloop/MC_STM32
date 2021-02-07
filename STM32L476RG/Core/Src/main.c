@@ -57,8 +57,7 @@ TIM_HandleTypeDef htim15;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-static const uint8_t TMP102_ADDR = 0X48 << 1;
-static const uint8_t REG_TEMP = 0x00;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -71,7 +70,9 @@ static void MX_ADC1_Init(void);
 static void MX_ADC2_Init(void);
 static void MX_ADC3_Init(void);
 /* USER CODE BEGIN PFP */
-
+unsigned int adc_voltage_conversion (uint16_t raw_a);
+unsigned int temperature_sensing (uint16_t raw_a);
+unsigned int current_sensing (uint16_t v1, uint16_t v2);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -92,12 +93,9 @@ int main(void)
   SVPWM_Init(&svpwm1, 10000);
   VHZ_Init(&vhz1, 0.001, 0.01, 10, 100);
 
-	  int16_t val;
-	  float temp_c;
-
 	uint16_t voltage;
-	uint16_t current1;
-	uint16_t current2;
+	uint16_t current1;	//before calculation this is actually the voltage before the shunt
+	uint16_t current2;	//voltage after the shunt
 	uint16_t temperature;
 	char msg[10];
 
@@ -155,24 +153,19 @@ int main(void)
 	  HAL_ADC_Start (&hadc2);
 	  HAL_ADC_PollForConversion(&hadc2, HAL_MAX_DELAY);
 	  current1 = HAL_ADC_GetValue(&hadc1);
-	  current1 = current_sensing (current);
 
 	  HAL_ADC_Start (&hadc3);
 	  HAL_ADC_PollForConversion(&hadc3, HAL_MAX_DELAY);
 	  current2 = HAL_ADC_GetValue(&hadc3);
-	  current2 = temperature_sensing(temperature);
 
-	  current1 = current_sensing (current1, current2);
+	  current1 = current_sensing (current1, current2);	//current 1 is the actual current we want not current2
 
 	  // adc input for temp would go somwhere here after delay
 
 
 
-		// Send out buffer (temperature or error message)
-		HAL_UART_Transmit(&huart2, buf, strlen((char*)buf), HAL_MAX_DELAY);
+	  // Send out buffer (temperature or error message)
 
-		sprintf(msg, "%hu\r\n", raw);
-		HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
 	delay (1000);
 
     /* USER CODE END WHILE */
