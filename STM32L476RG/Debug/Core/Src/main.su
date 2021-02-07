@@ -1,4 +1,4 @@
-main.c:90:5:main	24	static
+main.c:90:5:main	32	static
 main.c:182:6:SystemClock_Config	232	static
 main.c:244:13:MX_ADC1_Init	48	static
 main.c:309:13:MX_ADC2_Init	32	static

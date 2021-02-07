@@ -146,13 +146,13 @@ int main(void)
 	  HAL_ADC_Start(&hadc1);
 	  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
 	  voltage = HAL_ADC_GetValue(&hadc1);
-	  voltage = adc_voltage_conversion (voltage);
+	  voltage = adc_voltage_conversion (voltage) / SCALING_FACTOR;
 
 	  HAL_Delay (100);
 
 	  HAL_ADC_Start (&hadc2);
 	  HAL_ADC_PollForConversion(&hadc2, HAL_MAX_DELAY);
-	  current1 = HAL_ADC_GetValue(&hadc1);
+	  current1 = HAL_ADC_GetValue(&hadc2);
 
 	  HAL_ADC_Start (&hadc3);
 	  HAL_ADC_PollForConversion(&hadc3, HAL_MAX_DELAY);
@@ -160,7 +160,7 @@ int main(void)
 
 	  current1 = current_sensing (current1, current2);	//current 1 is the actual current we want not current2
 
-	  // adc input for temp would go somwhere here after delay
+	  // adc input for temp would go somwhere here after delay but needs a DMA to implement
 
 
 
@@ -652,7 +652,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
 unsigned int adc_voltage_conversion (uint16_t raw_a)
 {
-	return (unsigned int) (raw_a / ADC_VOLTAGE_CONVERSION / SCALING_FACTOR);
+	return (unsigned int) (raw_a / ADC_VOLTAGE_CONVERSION);
 }
 
 unsigned int temperature_sensing (uint16_t raw_a)
