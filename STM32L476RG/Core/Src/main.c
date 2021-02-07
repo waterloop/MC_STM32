@@ -148,7 +148,7 @@ int main(void)
 	  voltage = HAL_ADC_GetValue(&hadc1);
 	  voltage = adc_voltage_conversion (voltage);
 
-	  delay (100);
+	  HAL_Delay (100);
 
 	  HAL_ADC_Start (&hadc2);
 	  HAL_ADC_PollForConversion(&hadc2, HAL_MAX_DELAY);
@@ -166,7 +166,7 @@ int main(void)
 
 	  // Send out buffer (temperature or error message)
 
-	delay (1000);
+	  HAL_Delay (1000);
 
     /* USER CODE END WHILE */
 
