@@ -187,7 +187,7 @@ while(1){
 	pwrGood = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_4);
 
 	//Current sensing start
-	current = current_sensing (adc_voltage_conversion(raw));
+	current = current_sensing (raw);
 	//Current sensing end
 
 

@@ -29,7 +29,7 @@
 #include "PID.h"
 #include <string.h>
 #include <stdio.h>
-#include <DEFINES.H>
+#include "DEFINES.H"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -48,8 +48,8 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
-
-I2C_HandleTypeDef hi2c1;
+ADC_HandleTypeDef hadc2;
+ADC_HandleTypeDef hadc3;
 
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim15;
@@ -67,8 +67,9 @@ static void MX_GPIO_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM15_Init(void);
 static void MX_USART2_UART_Init(void);
-static void MX_I2C1_Init(void);
 static void MX_ADC1_Init(void);
+static void MX_ADC2_Init(void);
+static void MX_ADC3_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -91,13 +92,13 @@ int main(void)
   SVPWM_Init(&svpwm1, 10000);
   VHZ_Init(&vhz1, 0.001, 0.01, 10, 100);
 
-	HAL_StatusTypeDef ret;	//send	temp
-	uint8_t buf [12];		// store temp
-
 	  int16_t val;
 	  float temp_c;
 
-	uint16_t raw;	// store voltage
+	uint16_t voltage;
+	uint16_t current1;
+	uint16_t current2;
+	uint16_t temperature;
 	char msg[10];
 
 
@@ -124,8 +125,9 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM15_Init();
   MX_USART2_UART_Init();
-  MX_I2C1_Init();
   MX_ADC1_Init();
+  MX_ADC2_Init();
+  MX_ADC3_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
   HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1);
@@ -145,46 +147,33 @@ int main(void)
   {
 	  HAL_ADC_Start(&hadc1);
 	  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
-	  raw = HAL_ADC_GetValue(&hadc1);
+	  voltage = HAL_ADC_GetValue(&hadc1);
+	  voltage = adc_voltage_conversion (voltage);
 
-		buf [0] = REG_TEMP;//REQUEST TO READ
-			  ret = HAL_I2C_Master_Transmit(&hi2c1, TMP102_ADDR, buf, 1, HAL_MAX_DELAY);
-			  if (ret != HAL_OK)
-			  {
-				  	 strcpy ((char*)buf, "Error Tx\r\n");
-			  }
-			  else
-			  {
-				  //READ 2 bytes from the temperature register
-			      ret = HAL_I2C_Master_Receive(&hi2c1, TMP102_ADDR, buf, 2, HAL_MAX_DELAY);
-				  if (ret != HAL_OK)
-				  {
-					  	 strcpy ((char*)buf, "Error Tx\r\n");
-				  }
-				  else
-				  {
-					  //combine the bytes
-					  val = ((int16_t)buf[0]<<4) | (buf[1] >> 4);
-					  //convert to 2's complement, since temperature can be negative
-					  if  (val > 0x7FF)
-					  {
-						  val |= 0xF000;
-					  }
-					  // Convert to float temperature value (Celsius)
-					  temp_c = val * 0.0625;
-					  // Convert temperature to decimal format
-					  temp_c *= 100;
-					  sprintf ((char*)buf,
-				              "%u.%u C\r\n",
-							  ((unsigned int)temp_c/100),
-							  ((unsigned int)temp_c %100));
-				  }
-			  }
+	  delay (100);
+
+	  HAL_ADC_Start (&hadc2);
+	  HAL_ADC_PollForConversion(&hadc2, HAL_MAX_DELAY);
+	  current1 = HAL_ADC_GetValue(&hadc1);
+	  current1 = current_sensing (current);
+
+	  HAL_ADC_Start (&hadc3);
+	  HAL_ADC_PollForConversion(&hadc3, HAL_MAX_DELAY);
+	  current2 = HAL_ADC_GetValue(&hadc3);
+	  current2 = temperature_sensing(temperature);
+
+	  current1 = current_sensing (current1, current2);
+
+	  // adc input for temp would go somwhere here after delay
+
+
+
 		// Send out buffer (temperature or error message)
 		HAL_UART_Transmit(&huart2, buf, strlen((char*)buf), HAL_MAX_DELAY);
 
 		sprintf(msg, "%hu\r\n", raw);
 		HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+	delay (1000);
 
     /* USER CODE END WHILE */
 
@@ -232,10 +221,8 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_I2C1
-                              |RCC_PERIPHCLK_ADC;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_ADC;
   PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
-  PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_PCLK1;
   PeriphClkInit.AdcClockSelection = RCC_ADCCLKSOURCE_PLLSAI1;
   PeriphClkInit.PLLSAI1.PLLSAI1Source = RCC_PLLSOURCE_HSI;
   PeriphClkInit.PLLSAI1.PLLSAI1M = 1;
@@ -305,7 +292,7 @@ static void MX_ADC1_Init(void)
   }
   /** Configure Regular Channel
   */
-  sConfig.Channel = ADC_CHANNEL_2;
+  sConfig.Channel = ADC_CHANNEL_5;
   sConfig.Rank = ADC_REGULAR_RANK_1;
   sConfig.SamplingTime = ADC_SAMPLETIME_2CYCLES_5;
   sConfig.SingleDiff = ADC_SINGLE_ENDED;
@@ -322,48 +309,116 @@ static void MX_ADC1_Init(void)
 }
 
 /**
-  * @brief I2C1 Initialization Function
+  * @brief ADC2 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_I2C1_Init(void)
+static void MX_ADC2_Init(void)
 {
 
-  /* USER CODE BEGIN I2C1_Init 0 */
+  /* USER CODE BEGIN ADC2_Init 0 */
 
-  /* USER CODE END I2C1_Init 0 */
+  /* USER CODE END ADC2_Init 0 */
 
-  /* USER CODE BEGIN I2C1_Init 1 */
+  ADC_ChannelConfTypeDef sConfig = {0};
 
-  /* USER CODE END I2C1_Init 1 */
-  hi2c1.Instance = I2C1;
-  hi2c1.Init.Timing = 0x10909CEC;
-  hi2c1.Init.OwnAddress1 = 0;
-  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-  hi2c1.Init.OwnAddress2 = 0;
-  hi2c1.Init.OwnAddress2Masks = I2C_OA2_NOMASK;
-  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /** Configure Analogue filter
+  /* USER CODE BEGIN ADC2_Init 1 */
+
+  /* USER CODE END ADC2_Init 1 */
+  /** Common config
   */
-  if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
+  hadc2.Instance = ADC2;
+  hadc2.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
+  hadc2.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc2.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc2.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc2.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  hadc2.Init.LowPowerAutoWait = DISABLE;
+  hadc2.Init.ContinuousConvMode = DISABLE;
+  hadc2.Init.NbrOfConversion = 1;
+  hadc2.Init.DiscontinuousConvMode = DISABLE;
+  hadc2.Init.NbrOfDiscConversion = 1;
+  hadc2.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc2.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc2.Init.DMAContinuousRequests = DISABLE;
+  hadc2.Init.Overrun = ADC_OVR_DATA_PRESERVED;
+  hadc2.Init.OversamplingMode = DISABLE;
+  if (HAL_ADC_Init(&hadc2) != HAL_OK)
   {
     Error_Handler();
   }
-  /** Configure Digital filter
+  /** Configure Regular Channel
   */
-  if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
+  sConfig.Channel = ADC_CHANNEL_4;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_2CYCLES_5;
+  sConfig.SingleDiff = ADC_SINGLE_ENDED;
+  sConfig.OffsetNumber = ADC_OFFSET_NONE;
+  sConfig.Offset = 0;
+  if (HAL_ADC_ConfigChannel(&hadc2, &sConfig) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN I2C1_Init 2 */
+  /* USER CODE BEGIN ADC2_Init 2 */
 
-  /* USER CODE END I2C1_Init 2 */
+  /* USER CODE END ADC2_Init 2 */
+
+}
+
+/**
+  * @brief ADC3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_ADC3_Init(void)
+{
+
+  /* USER CODE BEGIN ADC3_Init 0 */
+
+  /* USER CODE END ADC3_Init 0 */
+
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN ADC3_Init 1 */
+
+  /* USER CODE END ADC3_Init 1 */
+  /** Common config
+  */
+  hadc3.Instance = ADC3;
+  hadc3.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
+  hadc3.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc3.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc3.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc3.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  hadc3.Init.LowPowerAutoWait = DISABLE;
+  hadc3.Init.ContinuousConvMode = DISABLE;
+  hadc3.Init.NbrOfConversion = 1;
+  hadc3.Init.DiscontinuousConvMode = DISABLE;
+  hadc3.Init.NbrOfDiscConversion = 1;
+  hadc3.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc3.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc3.Init.DMAContinuousRequests = DISABLE;
+  hadc3.Init.Overrun = ADC_OVR_DATA_PRESERVED;
+  hadc3.Init.OversamplingMode = DISABLE;
+  if (HAL_ADC_Init(&hadc3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_1;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_2CYCLES_5;
+  sConfig.SingleDiff = ADC_SINGLE_ENDED;
+  sConfig.OffsetNumber = ADC_OFFSET_NONE;
+  sConfig.Offset = 0;
+  if (HAL_ADC_ConfigChannel(&hadc3, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN ADC3_Init 2 */
+
+  /* USER CODE END ADC3_Init 2 */
 
 }
 
@@ -604,16 +659,22 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
 unsigned int adc_voltage_conversion (uint16_t raw_a)
 {
-	return (unsigned int) (raw_a / ADC_VOLTAGE_CONVERSION);
+	return (unsigned int) (raw_a / ADC_VOLTAGE_CONVERSION / SCALING_FACTOR);
 }
 
-unsigned int current_sensing (uint16_t raw_a)
+unsigned int temperature_sensing (uint16_t raw_a)
 {
 	raw_a = adc_voltage_conversion (raw_a);
 	if (raw_a != INPUT_VOLTAGE)
 		return (unsigned int) (THERMISTOR_RESISTANCE * raw_a / (INPUT_VOLTAGE - raw_a));
 	else
 		return raw_a;
+}
+unsigned int current_sensing (uint16_t v1, uint16_t v2)
+{
+	v1 = adc_voltage_conversion (v1);
+	v2 = adc_voltage_conversion (v2);
+	return ((unsigned int) ((v1-v2)/ I_RESISTOR));
 }
 /* USER CODE END 4 */
 
