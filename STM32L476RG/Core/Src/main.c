@@ -88,8 +88,7 @@ float a,b,c = 0;
   * @brief  The application entry point.
   * @retval int
   */
-int main(void)
-{
+int main(void){
   /* USER CODE BEGIN 1 */
   SVPWM_Init(&svpwm1, 10000);
   VHZ_Init(&vhz1, 0.001, 0.01, 10, 100);
@@ -656,6 +655,21 @@ void Fault_Mgmt(uint16_t current1, uint16_t current2, uint16_t current3, uint16_
   }
 }
 
+void speedFilter(){
+  /*
+  * In-order to get accurate data from the accelerometer, we need to filter out the noise that we're getting.
+  * 1) Use I2C to read from Sensor -> HAL_StatusTypeDef HAL_I2C_Mem_Write(I2C_HandleTypeDef * hi2c,
+  *                                                                       uint16_t DevAddress,
+  *                                                                       uint16_t MemAddress,
+  *                                                                       uint16_t MemAddSize,
+  *                                                                       uint8_t * pData,
+  *                                                                       uint16_t Size,
+  *                                                                       uint32_t Timeout)
+  * 2) Use Kalman's Algorithm??
+  * TODO: Read this: https://controllerstech.com/how-to-interface-mpu6050-gy-521-with-stm32/ && @Chaw3
+  */
+
+}
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	if(a==1000){
 		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
