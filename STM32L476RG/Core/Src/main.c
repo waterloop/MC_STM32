@@ -17,6 +17,7 @@
   ******************************************************************************
   */
 /* USER CODE END Header */
+//Hello Johnny
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -149,7 +150,7 @@ int main(void)
 	  voltage = adc_voltage_conversion (voltage) / SCALING_FACTOR;
 
 	  HAL_Delay (100);
-
+    // TOOD: Currently only one phase has a current sens, need to add two more!
 	  HAL_ADC_Start (&hadc2);
 	  HAL_ADC_PollForConversion(&hadc2, HAL_MAX_DELAY);
 	  current1 = HAL_ADC_GetValue(&hadc2);
@@ -162,7 +163,8 @@ int main(void)
 
 	  // adc input for temp would go somwhere here after delay but needs a DMA to implement
 
-
+    //Fault management
+    Fault_Mgmt(current1, voltage, temp);
 
 	  // Send out buffer (temperature or error message)
 
@@ -174,6 +176,11 @@ int main(void)
   }
   /* USER CODE END 3 */
 }
+
+
+//TODO: Look into shutdown and what connections we need to terminate
+
+
 
 /**
   * @brief System Clock Configuration
@@ -636,6 +643,19 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void Fault_Mgmt(uint16_t current1, uint16_t current2, uint16_t current3, uint16_t voltage, uint16_t temperature ){
+  if((current1 && current2 && current3) > MOTOR_CURRENT){
+    //SHUTDOWN
+  }
+  if(voltage > MOTOR_VOLTAGE){
+    //SHUTDOWN
+  }
+
+  if(temperature > MOTOR_TEMP_MAX){
+    //SHUTDOWN
+  }
+}
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	if(a==1000){
 		HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
