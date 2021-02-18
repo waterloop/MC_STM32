@@ -644,6 +644,10 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 void Fault_Mgmt(uint16_t current1, uint16_t current2, uint16_t current3, uint16_t voltage, uint16_t temperature ){
+  /*
+  * 1) Send CAN messages to BMS and Relay
+  * 2) Turn off all systems and safely (check to see if there is a way to properly disconnect )
+  */
   if((current1 && current2 && current3) > MOTOR_CURRENT){
     //SHUTDOWN
   }
