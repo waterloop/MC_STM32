@@ -1,0 +1,28 @@
+Voltage Sens:
+PA0 -> ADC1_IN5 -> VSEN_A
+PA1 -> ADC1_IN6 -> VSEN_B
+PA4 -> ADC1_IN9 -> VSEN_C
+
+Current Sens:
+PC3 -> ADC2_IN4 -> ISEN_A
+PC0 -> ADC2_IN1 -> ISEN_B
+PC1 -> ADC2_IN2 -> ISEN_C
+
+Timer Channels:
+PA10 -> TIM1_CH3 -> INH_C
+PA9 -> TIM1_CH2 -> INH_B
+PA8 -> TIM1_CH1 -> INH_A
+
+Neutral:
+PB15 -> TIM_CH3N -> INL_C
+PB14 -> TIM_CH2N -> INL_B
+PB13 -> TIM_CH1N -> INL_A
+
+PWRGD: (/w 10k)
+PC8 -> GPIO_INPUT -> PWRGD
+
+EN_Gate:
+PC3 -> GPIO_INPUT -> EN_Gate
+
+nFault: (/w 10k)
+PC9 -> GPIO_INPUT -> nFault
