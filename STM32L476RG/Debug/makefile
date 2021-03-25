@@ -1,5 +1,6 @@
 ################################################################################
 # Automatically-generated file. Do not edit!
+# Toolchain: GNU Tools for STM32 (9-2020-q2-update)
 ################################################################################
 
 -include ../makefile.init
@@ -28,49 +29,55 @@ endif
 
 -include ../makefile.defs
 
-BUILD_ARTIFACT_NAME := t10
+OPTIONAL_TOOL_DEPS := \
+$(wildcard ../makefile.defs) \
+$(wildcard ../makefile.init) \
+$(wildcard ../makefile.targets) \
+
+
+BUILD_ARTIFACT_NAME := STM32L476RG
 BUILD_ARTIFACT_EXTENSION := elf
 BUILD_ARTIFACT_PREFIX := 
 BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME).$(BUILD_ARTIFACT_EXTENSION)
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXECUTABLES += \
-t10.elf \
+STM32L476RG.elf \
 
 SIZE_OUTPUT += \
 default.size.stdout \
 
 OBJDUMP_LIST += \
-t10.list \
+STM32L476RG.list \
 
 OBJCOPY_BIN += \
-t10.bin \
+STM32L476RG.bin \
 
 
 # All Target
 all: main-build
 
 # Main-build Target
-main-build: t10.elf secondary-outputs
+main-build: STM32L476RG.elf secondary-outputs
 
 # Tool invocations
-t10.elf: $(OBJS) $(USER_OBJS) /Users/shabana/MC_STM32/STM32L476RG/STM32L476RGTX_FLASH.ld
-	arm-none-eabi-gcc -o "t10.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/Users/shabana/MC_STM32/STM32L476RG/STM32L476RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="t10.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+STM32L476RG.elf: $(OBJS) $(USER_OBJS) /Users/shabana/MC_STM32/STM32L476RG/STM32L476RGTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "STM32L476RG.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/Users/shabana/MC_STM32/STM32L476RG/STM32L476RGTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="STM32L476RG.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
-default.size.stdout: $(EXECUTABLES)
+default.size.stdout: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	arm-none-eabi-size  $(EXECUTABLES)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-t10.list: $(EXECUTABLES)
-	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "t10.list"
+STM32L476RG.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "STM32L476RG.list"
 	@echo 'Finished building: $@'
 	@echo ' '
 
-t10.bin: $(EXECUTABLES)
-	arm-none-eabi-objcopy  -O binary $(EXECUTABLES) "t10.bin"
+STM32L476RG.bin: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objcopy  -O binary $(EXECUTABLES) "STM32L476RG.bin"
 	@echo 'Finished building: $@'
 	@echo ' '
 

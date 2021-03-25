@@ -67,9 +67,10 @@ static void MX_USART2_UART_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_ADC2_Init(void);
 /* USER CODE BEGIN PFP */
-unsigned int adc_voltage_conversion (uint16_t raw_a);
-unsigned int temperature_sensing (uint16_t raw_a);
-unsigned int current_sensing (uint16_t v1, uint16_t v2);
+float adc_voltage_conversion (uint16_t raw_a);
+float temperature_sensing (uint16_t raw_a);
+float DC_current_sensing (uint16_t v1);
+float IGBT_current_sensing (uint16_t raw_v);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -93,9 +94,15 @@ int main(void)
 	uint16_t raw_voltage;
 	uint16_t current1;	//before calculation this is actually the voltage before the shunt
 	uint16_t current2;	//voltage after the shunt
-	uint16_t temperature;
+	uint16_t raw_temperature;
 	char msg[10];
 	float voltage;
+	float temperature;
+	float DC_current_M;
+	float DC_current_L;
+	float current_a;
+	float current_b;
+	float current_c;
 
 
   /* USER CODE END 1 */
@@ -146,25 +153,25 @@ int main(void)
 	  voltage = adc_voltage_conversion (voltage) / SCALING_FACTOR;
 
 	  HAL_Delay (100);
-    // TOOD: Currently only one phase has a current sens, need to add two more!
+	    // TOOD: Currently only one phase has a current sense, need to add two more!
 	  HAL_ADC_Start (&hadc2);
 	  HAL_ADC_PollForConversion(&hadc2, HAL_MAX_DELAY);
-	  current1 = HAL_ADC_GetValue(&hadc2);
+	  current_raw = HAL_ADC_GetValue(&hadc2);
+	  DC_current_M = DC_current_sensing (current_raw);	//current 1 is the actual current we want not current2
+
+	  HAL_Delay (100);
 
 	  HAL_ADC_Start (&hadc3);
 	  HAL_ADC_PollForConversion(&hadc3, HAL_MAX_DELAY);
-	  current2 = HAL_ADC_GetValue(&hadc3);
+	  raw_temperature = HAL_ADC_GetValue(&hadc3);
+	  temperature = temperature_sensing (raw_temperature);
 
-	  float final_current = current_sensing (current1, current2);	//current 1 is the actual current we want not current2
-
-	  // adc input for temp would go somwhere here after delay but needs a DMA to implement
-
-    //Fault management
-    Fault_Mgmt(current1, voltage, temperature);
+	    //Fault management
+	    Fault_Mgmt(current_a, voltage, temperature);
 
 	  // Send out buffer (temperature or error message)
 
-	  HAL_Delay (1000);
+	  HAL_Delay (100);
 
     /* USER CODE END WHILE */
 
@@ -607,15 +614,19 @@ float adc_voltage_conversion (uint16_t raw_a)
 float temperature_sensing (uint16_t raw_a)
 {
 	float thermistor = adc_voltage_conversion (raw_a); //gets the voltage
-		float thermistor = (float) (THERMISTOR_RESISTANCE * raw_a / (INPUT_VOLTAGE - raw_a)); //calculates therm resistance
-		return (float) ( pow((1 / ROOM_TEMP) + 1 / THERMISTOR_BETA * (log(thermistor / THERMISTOR_RESISTANCE)),-1) -273.15);
+	thermistor = (float) (THERMISTOR_RESISTANCE * raw_a / (INPUT_VOLTAGE - raw_a)); //calculates therm resistance
+	return (float) ( pow((1 / ROOM_TEMP) + 1 / THERMISTOR_BETA * (log(thermistor / THERMISTOR_RESISTANCE)),-1) -273.15);
 
 }
-float current_sensing (uint16_t raw_v1, uint16_t raw_v2)
+float DC_current_sensing (uint16_t raw_v)
 {
-	float v1 = adc_voltage_conversion (raw_v1);
-	float v2 = adc_voltage_conversion (raw_v2);
-	return (float) ((v1-v2)/ I_RESISTOR);
+	float voltage_difference = adc_voltage_conversion (raw_v)/GAIN;
+	return (float) voltage_difference / DC_RESISTOR;
+}
+float IGBT_current_sensing (uint16_t raw_v)
+{
+	float voltage_difference = adc_voltage_conversion (raw_v)/GAIN_IGBT;
+	return (float) voltage_difference / I_RESISTOR;
 }
 /* USER CODE END 4 */
 
