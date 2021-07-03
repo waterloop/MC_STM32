@@ -29,8 +29,6 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
-#include "SVPWM.h"
-#include "VHZ.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -62,6 +60,22 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define ADC_VA_Pin GPIO_PIN_0
+#define ADC_VA_GPIO_Port GPIOC
+#define ADC_VB_Pin GPIO_PIN_1
+#define ADC_VB_GPIO_Port GPIOC
+#define ADC_VDC_Pin GPIO_PIN_2
+#define ADC_VDC_GPIO_Port GPIOC
+#define ADC_VC_Pin GPIO_PIN_3
+#define ADC_VC_GPIO_Port GPIOC
+#define ADC_TEMP_Pin GPIO_PIN_0
+#define ADC_TEMP_GPIO_Port GPIOA
+#define ISENC_Pin GPIO_PIN_2
+#define ISENC_GPIO_Port GPIOA
+#define ISENA_Pin GPIO_PIN_4
+#define ISENA_GPIO_Port GPIOA
+#define ISENB_Pin GPIO_PIN_5
+#define ISENB_GPIO_Port GPIOA
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

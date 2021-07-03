@@ -36,3 +36,4 @@ void SVPWM_Update(SVPWM *svm, VHZPROFILE *vhz, TIM_HandleTypeDef *htim);
 void SVPWM_Init(SVPWM *svm, float SwitchFreq);
 
 #endif /* INC_SVPWM_H_ */
+
