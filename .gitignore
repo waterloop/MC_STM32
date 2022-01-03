@@ -1,1 +1,7 @@
 /.metadata/
+build
+bin
+temp
+Debug
+
+.DS_Store
