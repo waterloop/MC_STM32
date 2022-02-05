@@ -12,7 +12,7 @@ git submodule --init --recursive --remote
 
 # Build
 
-Start by building the `WLoopCan` submodule and then the BMS files
+Start by building the `WLoopCan` submodule and then the MC files
 
 ``` bash
 cd /path/to/BMW_SW_G5
