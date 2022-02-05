@@ -16,7 +16,6 @@
 TARGET = main
 
 DEVICE_DIRNAME = STM32F405RGTx
-# DEVICE_DIRNAME = STM32F401RETx
 
 ######################################
 # building variables
@@ -104,7 +103,8 @@ AS_DEFS =
 
 C_DEFS = \
 -D USE_HAL_DRIVER \
--D STM32F405xx
+-D STM32F405xx \
+-D MOTOR_CONTROLLER
 
 
 # AS includes
@@ -119,7 +119,8 @@ C_INCLUDES =  \
 -I ./$(DEVICE_DIRNAME)/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2 \
 -I ./$(DEVICE_DIRNAME)/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F \
 -I ./$(DEVICE_DIRNAME)/Drivers/CMSIS/Device/ST/STM32F4xx/Include \
--I ./$(DEVICE_DIRNAME)/Drivers/CMSIS/Include
+-I ./$(DEVICE_DIRNAME)/Drivers/CMSIS/Include \
+-I ./WLoopCAN/include
 
 C_INCLUDES += $(USER_INCLUDES)
 
@@ -180,7 +181,7 @@ $(BUILD_DIR)/%.o: %.s makefile | $(BUILD_DIR)
 	@echo ""
 
 $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) makefile
-	$(CPP_CC) $(OBJECTS) $(LDFLAGS) -o $@
+	$(CPP_CC) $(OBJECTS) ./WLoopCAN/bin/wloop_can.a $(LDFLAGS) -o $@
 	@echo ""
 	$(SZ) $@
 	@echo ""
@@ -205,7 +206,8 @@ analyze:
 	$(PREFIX)objdump -t $(BUILD_DIR)/$(TARGET).elf
 
 flash:
-	st-flash write $(BUILD_DIR)/main.bin 0x08000000 
+	st-flash write $(BUILD_DIR)/main.bin 0x08000000
+	st-flash reset
 
 #######################################
 # dependencies
