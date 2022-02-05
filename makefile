@@ -111,7 +111,7 @@ C_DEFS = \
 AS_INCLUDES = 
 
 # C includes
-C_INCLUDES =  \
+C_INCLUDES = \
 -I ./$(DEVICE_DIRNAME)/Core/Inc \
 -I ./$(DEVICE_DIRNAME)/Drivers/STM32F4xx_HAL_Driver/Inc \
 -I ./$(DEVICE_DIRNAME)/Drivers/STM32F4xx_HAL_Driver/Inc/Legacy \

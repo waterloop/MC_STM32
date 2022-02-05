@@ -81,7 +81,12 @@ static void MX_TIM3_Init(void);
 void StartDefaultTask(void *argument);
 
 /* USER CODE BEGIN PFP */
-
+extern "C" {
+  HAL_StatusTypeDef HAL_Init(void);
+  osStatus_t osKernelInitialize(void);
+  osThreadId_t osThreadNew(osThreadFunc_t func, void *argument, const osThreadAttr_t *attr);
+  osStatus_t osKernelStart(void);
+}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
