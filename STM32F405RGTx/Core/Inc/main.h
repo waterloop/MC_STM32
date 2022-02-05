@@ -59,12 +59,6 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define LED_R_Pin GPIO_PIN_13
-#define LED_R_GPIO_Port GPIOC
-#define LED_B_Pin GPIO_PIN_14
-#define LED_B_GPIO_Port GPIOC
-#define LED_G_Pin GPIO_PIN_15
-#define LED_G_GPIO_Port GPIOC
 #define USER_BUTTON_Pin GPIO_PIN_3
 #define USER_BUTTON_GPIO_Port GPIOC
 #define VSENSE_A_Pin GPIO_PIN_0
