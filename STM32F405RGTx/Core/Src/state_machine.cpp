@@ -62,33 +62,64 @@ State_t MCStateMachine::NormalFaultChecking(void)
     int overvolt_faults = 0;
     int undervolt_faults = 0;
     int temp_faults = 0;
+    // check for temperature faults
     for (int i = 0; i < NUM_MOSFETS; ++i)
     {
-        float mosfetTemp = MotorControllerData[i];
+        float mosfetTemp = MotorControllerData.FET_temps[i];
         if (mosfetTemp > MAX_MOSFET_TEMP_NORMAL)
         {
             ++temp_faults;
         }
-        if (overvolt_faults > MIN_OVERVOLT_FAULTS || undervolt_faults > MIN_UNDERVOLT_FAULTS || temp_faults > MIN_TEMP_FAULTS)
+        if (temp_faults > MIN_TEMP_FAULTS)
         {
-            if (overvolt_faults > MIN_OVERVOLT_FAULTS)
-            {
-                bms_error_code = BATTERY_OVERVOLTAGE_ERR;
-            }
-            else if (undervolt_faults > MIN_UNDERVOLT_FAULTS)
-            {
-                /*
-                    TODO: Spelling mistake in config.h
-                    BATTERY_UNDERVOLTAGE_ERR should be BATTERY_UNDERVOLTAGE_ERR
-                */
-                bms_error_code = BATTERY_UNDERVOLTAGE_ERR;
-            }
-            else
-            {
-                // TODO: why is there no BATTERY_TEMPERATURE_ERR error code?
-            }
+            // TODO: add error code
             return NormalDangerFault;
         }
     }
+    // check undervolts and overvolts for phase outputs
+    if (MotorControllerData.pVa < MIN_VOLTAGE_NORMAL)
+    {
+        undervolt_faults++;
+    }
+    if (MotorControllerData.pVb < MIN_VOLTAGE_NORMAL)
+    {
+        undervolt_faults++;
+    }
+    if (MotorControllerData.pVc < MIN_VOLTAGE_NORMAL)
+    {
+        undervolt_faults++;
+    }
+
+    if (MotorControllerData.pVa > MAX_VOLTAGE_NORMAL)
+    {
+        overvolt_faults++;
+    }
+    if (MotorControllerData.pVb > MAX_VOLTAGE_NORMAL)
+    {
+        overvolt_faults++;
+    }
+    if (MotorControllerData.pVc > MAX_VOLTAGE_NORMAL)
+    {
+        overvolt_faults++;
+    }
+
+    // Check current for phase outputs
+    if (MotorControllerData.pIa > MAX_CURRENT_NORMAL || MotorControllerData.pIb > MAX_CURRENT_NORMAL || MotorControllerData.pIc > MAX_CURRENT_NORMAL)
+    {
+        // error code
+        return NormalDangerFault;
+    }
+
+    // DC fault checking
+    if (dc_voltage > MAX_DCVOLTAGE_NORMAL)
+    {
+        // error code
+        return NormalDangerFault;
+    }
+    else if (dc_voltage < MIN_DCVOLTAGE_NORMAL)
+    {
+        return NormalDangerFault;
+    }
+    // what does cap temp mean for dc_cap_temp
     return NoFault;
 }

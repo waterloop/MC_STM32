@@ -10,6 +10,7 @@
 // Constants
 // Mosfet Array Length
 #define NUM_MOSFETS 6
+#define NUM_PHASE_OUTPUTS 3
 
 // Severe Fault
 #define MAX_VOLTAGE_SEVERE 4.0
@@ -19,6 +20,8 @@
 
 // Normal Fault
 #define MAX_MOSFET_TEMP_NORMAL 60.0
+#define MAX_DCVOLTAGE_NORMAL 4.0
+#define MIN_DCVOLTAGE_NORMAL 1.8
 #define MAX_VOLTAGE_NORMAL 3.8
 #define MIN_VOLTAGE_NORMAL 1.8
 #define MAX_TEMP_NORMAL 60.0
