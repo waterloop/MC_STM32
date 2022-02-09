@@ -123,3 +123,71 @@ State_t MCStateMachine::NormalFaultChecking(void)
     // what does cap temp mean for dc_cap_temp
     return NoFault;
 }
+
+State_t MCStateMachine::SevereFaultChecking(void)
+{
+    float current = global_bms_data.battery.current;
+    int overvolt_faults = 0;
+    int undervolt_faults = 0;
+    int temp_faults = 0;
+    // check for temperature faults
+    for (int i = 0; i < NUM_MOSFETS; ++i)
+    {
+        float mosfetTemp = MotorControllerData.FET_temps[i];
+        if (mosfetTemp > MAX_MOSFET_TEMP_SEVERE)
+        {
+            ++temp_faults;
+        }
+        if (temp_faults > MIN_TEMP_FAULTS)
+        {
+            // TODO: add error code
+            return SevereDangerFault;
+        }
+    }
+    // check undervolts and overvolts for phase outputs
+    if (MotorControllerData.pVa < MIN_VOLTAGE_SEVERE)
+    {
+        undervolt_faults++;
+    }
+    if (MotorControllerData.pVb < MIN_VOLTAGE_SEVERE)
+    {
+        undervolt_faults++;
+    }
+    if (MotorControllerData.pVc < MIN_VOLTAGE_SEVERE)
+    {
+        undervolt_faults++;
+    }
+
+    if (MotorControllerData.pVa > MAX_VOLTAGE_SEVERE)
+    {
+        overvolt_faults++;
+    }
+    if (MotorControllerData.pVb > MAX_VOLTAGE_SEVERE)
+    {
+        overvolt_faults++;
+    }
+    if (MotorControllerData.pVc > MAX_VOLTAGE_SEVERE)
+    {
+        overvolt_faults++;
+    }
+
+    // Check current for phase outputs
+    if (MotorControllerData.pIa > MAX_CURRENT_SEVERE || MotorControllerData.pIb > MAX_CURRENT_SEVERE || MotorControllerData.pIc > MAX_CURRENT_SEVERE)
+    {
+        // error code
+        return SevereDangerFault;
+    }
+
+    // DC fault checking
+    if (dc_voltage > MAX_DCVOLTAGE_SEVERE)
+    {
+        // error code
+        return SevereDangerFault;
+    }
+    else if (dc_voltage < MIN_DCVOLTAGE_SEVERE)
+    {
+        return SevereDangerFault;
+    }
+    // what does cap temp mean for dc_cap_temp
+    return NoFault;
+}

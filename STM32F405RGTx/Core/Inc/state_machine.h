@@ -13,6 +13,9 @@
 #define NUM_PHASE_OUTPUTS 3
 
 // Severe Fault
+#define MAX_MOSFET_TEMP_SEVERE 70.0
+#define MAX_DCVOLTAGE_SEVERE 4.0
+#define MIN_DCVOLTAGE_SEVERE 1.8
 #define MAX_VOLTAGE_SEVERE 4.0
 #define MIN_VOLTAGE_SEVERE 1.0
 #define MAX_TEMP_SEVERE 70.0
@@ -60,6 +63,7 @@ public:
     State_t State;
     pfEvent Event;
     State_t NormalFaultChecking(void);
+    State_t SevereFaultChecking(void);
     State_t InitializeEvent(void);
     State_t InitializeFaultEvent(void);
     State_t IdleEvent(void);
