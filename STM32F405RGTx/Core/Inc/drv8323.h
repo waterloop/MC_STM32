@@ -4,51 +4,72 @@
 
 // SIDENOTE: fuck this chip
 
-typedef enum {
-    FAULT       = 0b1U << 10,       // Logical OR of FAULT status registers, NOT of nFAULT pin
-    VDS_OCP     = 0b1U << 9,        // VDS monitor overcurrent fault
-    GDF         = 0b1U << 8,        // Gate drive fault
-    UVLO        = 0b1U << 7,        // Undervoltage lockout fault
-    OTSD        = 0b1U << 6,        // Overtemperature shutdown
-    VDS_HA      = 0b1U << 5,        // VDS overcurrent fault on A high-side FET
-    VDS_LA      = 0b1U << 4,        // VDS overcurrent fault on A low-side FET
-    VDS_HB      = 0b1U << 3,        // VDS overcurrent fault on B high-side FET
-    VDS_LB      = 0b1U << 2,        // VDS overcurrent fault on B low-side FET
-    VDS_HC      = 0b1U << 1,        // VDS overcurrent fault on C high-side FET
-    VDS_LC      = 0b1U << 0         // VDS overcurrent fault on C low-side FET
-} FAULT_STATUS_1_FIELD;
+#define FAULT_STATUS_1_ADDR         0x00
+#define FAULT_STATUS_2_ADDR         0x01
+#define DRIVER_CONTROL_ADDR         0x02
+#define GATE_DRIVE_HS_ADDR          0x03
+#define GATE_DRIVE_LS_ADDR          0x04
+#define OCP_CONTROL_ADDR            0x05
+#define CSA_CONTROL_ADDR            0x06
 
-typedef enum {
-    SA_OC       = 0b1U << 10,       // Overcurrent on phase A differential amplifier
-    SB_OC       = 0b1U << 9,        // Overcurrent on phase B differential amplifier
-    SC_OC       = 0b1U << 8,        // Overcurrent on phase C differential amplifier
-    OTW         = 0b1U << 7,        // Overtemperature warning
-    CPUV        = 0b1U << 6,        // Charge pump undervoltage
-    VGS_HA      = 0b1U << 5,        // Gate drive fault on A high-side FET
-    VGS_LA      = 0b1U << 4,        // Gate drive fault on A low-side FET
-    VGS_HB      = 0b1U << 3,        // Gate drive fault on B high-side FET
-    VGS_LB      = 0b1U << 2,        // Gate drive fault on B low-side FET
-    VGS_HC      = 0b1U << 1,        // Gate drive fault on C high-side FET
-    VGS_LC      = 0b1U << 0         // Gate drive fault on C low-side FET
-} FAULT_STATUS_2_FIELD;
+#define FAULT_STATUS_1_FAULT        10
+#define FAULT_STATUS_1_VDS_OCP      9
+#define FAULT_STATUS_1_GDF          8
+#define FAULT_STATUS_1_UVLO         7
+#define FAULT_STATUS_1_OTSD         6
+#define FAULT_STATUS_1_VDS_HA       5
+#define FAULT_STATUS_1_VDS_LA       4
+#define FAULT_STATUS_1_VDS_HB       3
+#define FAULT_STATUS_1_VDS_LB       2
+#define FAULT_STATUS_1_VDS_HC       1
+#define FAULT_STATUS_1_VDS_LC       0
 
-typedef enum {
-    DIS_CPUV    = 0b1U << 9,        // 0b1 => charge pump UVLO disabled
-    DIS_GDF     = 0b1U << 8,        // 0b1 => gate drive fault disabled
-    OTW_REP     = 0b1U << 7,        // 0b1 => OTW reported on nFAULT
-    PWM_MODE    = 0b11U << 5,       // 0b00 => 6x, 0b01 => 3x, 0b10 => 1x, 0b11 => independent
-    PWM_COM1    = 0b1U << 4,        // 0b0 => 1x mode uses synchronous recification
-    PWM_DIR1    = 0b1U << 3,        // ORed with INHC (DIR) input in 1x PWM mode
-    COAST       = 0b1U << 2,        // Write 1 to put all FETs in Hi-Z
-    BRAKE       = 0b1U << 1,        // Write 1 to turn on all low-side FETs in 1x mode, ORed with INLC (BRAKE) input
-    CLR_FLT     = 0b1U << 0,        // Write 1 to clear latched fault bits, resets after being written
-} DRIVER_CONTROL_FIELD;
+#define FAULT_STATUS_2_SA_OC        10
+#define FAULT_STATUS_2_SB_OC        9
+#define FAULT_STATUS_2_SC_OC        8
+#define FAULT_STATUS_2_OTW          7
+#define FAULT_STATUS_2_CPUV         6
+#define FAULT_STATUS_2_VGS_HA       5
+#define FAULT_STATUS_2_VGS_LA       4
+#define FAULT_STATUS_2_VGS_HB       3
+#define FAULT_STATUS_2_VGS_LB       2
+#define FAULT_STATUS_2_VGS_HC       1
+#define FAULT_STATUS_2_VGS_LC       0
 
-typedef enum {
-    LOCK        = 0b111U << 8,      // 0b110 => lock settings and ignore further writes, 0b011 => unlock
-    IDRIVEP_HS  = 
-} GATE_DRIVE_HS_FIELD;
+#define DRIVER_CONTROL_DIS_CPUV     9
+#define DRIVER_CONTROL_DIS_GDF      8
+#define DRIVER_CONTROL_OTW_REP      7
+#define DRIVER_CONTROL_PWM_MODE     5
+#define DRIVER_CONTROL_PWM_COM1     4
+#define DRIVER_CONTROL_PWM_DIR1     3
+#define DRIVER_CONTROL_COAST        2
+#define DRIVER_CONTROL_BRAKE        1
+#define DRIVER_CONTROL_CLR_FLT      0
 
+#define GATE_DRIVE_HS_LOCK          8
+#define GATE_DRIVE_HS_IDRIVEP_HS    4
+#define GATE_DRIVE_HS_IDRIVEN_HS    0
+
+#define GATE_DRIVE_LS_CBC           10
+#define GATE_DRIVE_LS_TDRIVE        8
+#define GATE_DRIVE_LS_IDRIVEP_LS    4
+#define GATE_DRIVE_LS_IDRIVEN_LS    0
+
+#define OCP_CONTROL_TRETRY          10
+#define OCP_CONTROL_DEAD_TIME       8
+#define OCP_CONTROL_OCP_MODE        6
+#define OCP_CONTROL_OCP_DEG         4
+#define OCP_CONTROL_VDS_LVL         0
+
+#define CSA_CONTROL_CSA_FET         10
+#define CSA_CONTROL_VREF_DIV        9
+#define CSA_CONTROL_LS_REF          8
+#define CSA_CONTROL_CSA_GAIN        6
+#define CSA_CONTROL_DIS_SEN         5
+#define CSA_CONTROL_CSA_CAL_A       4
+#define CSA_CONTROL_CSA_CAL_B       3
+#define CSA_CONTROL_CSA_CAL_C       2
+#define CSA_CONTROL_SEN_LVL         0
 
 typedef struct {
     uint16_t FAULT_STATUS_1;
@@ -59,3 +80,9 @@ typedef struct {
     uint16_t OCP_CONTROL;
     uint16_t CSA_CONTROL;
 } Drv8323;
+
+Drv8323 Drv8323_init();
+
+void Drv8323_read_reg(Drv8323* self, uint8_t addr);
+void Drv8323_read_all(Drv8323* self);
+void Drv8323_commit(Drv8323* self);
