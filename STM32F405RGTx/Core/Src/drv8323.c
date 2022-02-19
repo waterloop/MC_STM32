@@ -115,4 +115,3 @@ Drv8323_Status Drv8323_read_all(Drv8323* self) {
 
     return status;
 }
-
