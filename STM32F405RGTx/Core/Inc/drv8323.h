@@ -75,6 +75,17 @@ extern "C" {
 #define CSA_CONTROL_CSA_CAL_C       2
 #define CSA_CONTROL_SEN_LVL         0
 
+#define Drv8323_enable()        ( HAL_GPIO_WritePin(EN_DRIVER_GPIO_Port, EN_DRIVER_Pin, (GPIO_PinState)1) )
+#define Drv8323_disable()       ( HAL_GPIO_WritePin(EN_DRIVER_GPIO_Port, EN_DRIVER_Pin, (GPIO_PinState)0) )
+#define Drv8323_cs_high()       ( HAL_GPIO_WritePin(CS_DRIVER_GPIO_Port, CS_DRIVER_Pin, (GPIO_PinState)1) )
+#define Drv8323_cs_low()        ( HAL_GPIO_WritePin(CS_DRIVER_GPIO_Port, CS_DRIVER_Pin, (GPIO_PinState)0) )
+
+typedef enum {
+    DRV8323_OK = 0b00U,
+    DRV8323_SPI_ERR = 0b01U,
+    DRV8323_INVALID_ARG_ERR = 0b10U
+} Drv8323_Status;
+
 typedef struct {
     uint16_t FAULT_STATUS_1;
     uint16_t FAULT_STATUS_2;
@@ -85,11 +96,17 @@ typedef struct {
     uint16_t CSA_CONTROL;
 } Drv8323;
 
+Drv8323_Status _Drv8323_TransmitRecieve(
+    SPI_HandleTypeDef *hspi, uint8_t *pTxData, uint8_t *pRxData, uint16_t Size, uint32_t Timeout);
+
+Drv8323_Status _Drv8323_Transmit(
+    SPI_HandleTypeDef *hspi, uint8_t *pData, uint16_t Size, uint32_t Timeout);
+
 Drv8323 Drv8323_init();
 
-void Drv8323_read_reg(Drv8323* self, uint8_t addr);
-void Drv8323_read_all(Drv8323* self);
-void Drv8323_commit(Drv8323* self);
+Drv8323_Status Drv8323_read_reg(Drv8323* self, uint8_t addr);
+Drv8323_Status Drv8323_read_all(Drv8323* self);
+Drv8323_Status Drv8323_commit(Drv8323* self);
 
 #ifdef __cplusplus
 }
