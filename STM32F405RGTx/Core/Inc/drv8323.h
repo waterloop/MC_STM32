@@ -2,6 +2,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // SIDENOTE: fuck this chip
 
 #define FAULT_STATUS_1_ADDR         0x00
@@ -86,3 +90,7 @@ Drv8323 Drv8323_init();
 void Drv8323_read_reg(Drv8323* self, uint8_t addr);
 void Drv8323_read_all(Drv8323* self);
 void Drv8323_commit(Drv8323* self);
+
+#ifdef __cplusplus
+}
+#endif

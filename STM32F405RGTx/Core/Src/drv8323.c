@@ -43,6 +43,25 @@ void Drv8323_read_reg(Drv8323* self, uint8_t addr) {
     *reg &= 0x7ff;   // mask of 11 1s
 }
 
+void Drv8323_commit(Drv8323* self) {
+    uint16_t* reg_table[7] = {
+        &(self->FAULT_STATUS_1),
+        &(self->FAULT_STATUS_2),
+        &(self->DRIVER_CONTROL),
+        &(self->GATE_DRIVE_HS),
+        &(self->GATE_DRIVE_LS),
+        &(self->OCP_CONTROL),
+        &(self->CSA_CONTROL)
+    };
+
+    uint16_t tx = 0;
+    for (uint8_t i = 0; i < 7; i++) {
+        tx = (i << 11) | (*reg_table[i] & 0x7FF);
+        HAL_SPI_Transmit(
+            &hspi1, (uint8_t*)(tx), 2, HAL_MAX_DELAY);
+    }
+}
+
 void Drv8323_read_all(Drv8323* self) {
     uint16_t* reg_table[7] = {
         &(self->FAULT_STATUS_1),
@@ -56,7 +75,7 @@ void Drv8323_read_all(Drv8323* self) {
 
     uint16_t tx = 0;
     for (uint8_t i = 0; i < 7; i++) {
-        tx |= (1 << 15) | (i << 11);
+        tx = (1 << 15) | (i << 11);
         HAL_SPI_TransmitReceive(
             &hspi1, (uint8_t*)(&tx), (uint8_t*)reg_table[i], 2, HAL_MAX_DELAY);
 
