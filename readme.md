@@ -15,7 +15,7 @@ git submodule --init --recursive --remote
 Start by building the `WLoopCan` submodule and then the MC files
 
 ``` bash
-cd /path/to/BMW_SW_G5
+cd /path/to/MC_STM32
 cd WLoopCAN
 make motor_controller
 cd ..
