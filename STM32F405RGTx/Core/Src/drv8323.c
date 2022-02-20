@@ -35,8 +35,6 @@ Drv8323 Drv8323_init() {
 
 Drv8323_Status Drv8323_commit(Drv8323* self) {
     uint16_t* reg_table[7] = {
-        &(self->FAULT_STATUS_1),
-        &(self->FAULT_STATUS_2),
         &(self->DRIVER_CONTROL),
         &(self->GATE_DRIVE_HS),
         &(self->GATE_DRIVE_LS),
@@ -46,7 +44,7 @@ Drv8323_Status Drv8323_commit(Drv8323* self) {
 
     Drv8323_Status status = DRV8323_OK;
     uint16_t tx = 0;
-    for (uint8_t i = 0; i < 7; i++) {
+    for (uint8_t i = 2; i < 7; i++) {
         tx = (i << 11) | (*reg_table[i] & 0x7FF);
         status |= _Drv8323_Transmit(&hspi1, (uint8_t*)(&tx), 2, HAL_MAX_DELAY);
     }
