@@ -1,3 +1,6 @@
 [submodule "WLoopCAN"]
 	path = WLoopCAN
 	url = https://github.com/waterloop/WLoopCAN.git
+[submodule "WLoopUtil"]
+	path = WLoopUtil
+	url = https://github.com/waterloop/WLoopUtil.git
