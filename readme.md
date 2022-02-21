@@ -18,6 +18,8 @@ Start by building the `WLoopCan` submodule and then the MC files
 cd /path/to/MC_STM32
 cd WLoopCAN
 make motor_controller
+cd WLoopUtil
+make motor_controller
 cd ..
 make
 ```
