@@ -3,6 +3,7 @@
 #include "cmsis_os.h"
 #include "drv8323.h"
 #include "mc.hpp"
+#include "threads.hpp"
 
 Drv8323 drv8323;
 
@@ -25,7 +26,8 @@ int mc_entry() {
     osKernelInitialize();
 
     printf("initializing rtos threads...\r\n");
-    // init threads here...
+    
+    MeasurementsThread::initialize();
 
     printf("starting rtos scheduler...\r\n");
     osKernelStart();
