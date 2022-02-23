@@ -191,3 +191,69 @@ State_t MCStateMachine::SevereFaultChecking(void)
     // what does cap temp mean for dc_cap_temp
     return NoFault;
 }
+
+State_t MCStateMachine::InitializeEvent(void)
+{
+    return Idle;
+}
+
+State_t MCStateMachine::IdleEvent(void)
+{
+    SetLEDColour(0.0, 50.0, 0.0);
+    State_t normal_fault_check = NormalFaultChecking();
+    State_t severe_fault_check = SevereFaultChecking();
+    if (severe_fault_check == SevereDangerFault)
+    {
+        return severe_fault_check;
+    }
+    else if (normal_fault_check == NormalDangerFault)
+    {
+        return normal_fault_check;
+    }
+
+    // need to understand pins
+
+    if (!Queue_empty(&RX_QUEUE))
+    {
+        CANFrame rx_frame = CANBus_get_frame();
+        uint8_t state_id = CANFrame_get_field(&rx_frame, STATE_ID);
+        idle_state_id = state_id;
+        if (state_id == AUTO_PILOT)
+        {
+            return Run;
+        }
+    }
+
+    return Idle;
+}
+
+State_t AutoPilotEvent(void)
+{
+    // Set LED colour to yellow
+    SetLEDColour(50.0, 50.0, 0.0);
+
+    // Send ACK on CAN when stop complete
+    CANFrame tx_frame = CANFrame_init(BMS_STATE_CHANGE_ACK_NACK);
+    CANFrame_set_field(&tx_frame, STATE_CHANGE_ACK_ID, run_state_id);
+    CANFrame_set_field(&tx_frame, STATE_CHANGE_ACK, 0x00);
+    if (CANBus_put_frame(&tx_frame) != HAL_OK)
+    {
+        Error_Handler();
+    }
+
+    // Receive CAN frame
+    if (!Queue_empty(&RX_QUEUE))
+    {
+        CANFrame rx_frame = CANBus_get_frame();
+        uint8_t state_id = CANFrame_get_field(&rx_frame, STATE_ID);
+        if (state_id == EMERGENCY_BRAKE)
+        {
+            return Idle;
+        }
+        else
+        {
+            return Stop;
+        }
+    }
+    return Stop;
+}
