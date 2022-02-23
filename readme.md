@@ -7,7 +7,7 @@ Code repository for the Goose V Motor Controller Logic Board.
 ```bash
 git clone https://github.com/waterloop/MC_STM32.git
 cd MC_STM32
-git submodule --init --recursive --remote
+git submodule update --init --recursive
 ```
 
 # Build
@@ -17,6 +17,8 @@ Start by building the `WLoopCan` submodule and then the MC files
 ``` bash
 cd /path/to/MC_STM32
 cd WLoopCAN
+make motor_controller
+cd WLoopUtil
 make motor_controller
 cd ..
 make

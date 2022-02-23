@@ -16,6 +16,7 @@
 TARGET = main
 
 DEVICE_DIRNAME = STM32F405RGTx
+BOARD = motor_controller
 
 ######################################
 # building variables
@@ -120,7 +121,8 @@ C_INCLUDES = \
 -I ./$(DEVICE_DIRNAME)/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F \
 -I ./$(DEVICE_DIRNAME)/Drivers/CMSIS/Device/ST/STM32F4xx/Include \
 -I ./$(DEVICE_DIRNAME)/Drivers/CMSIS/Include \
--I ./WLoopCAN/include
+-I ./WLoopCAN/include \
+-I ./WLoopUtil/include
 
 C_INCLUDES += $(USER_INCLUDES)
 
@@ -168,20 +170,20 @@ vpath %.cpp $(sort $(dir $(CPP_SOURCES)))
 OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASM_SOURCES:.s=.o)))
 vpath %.s $(sort $(dir $(ASM_SOURCES)))
 
-$(BUILD_DIR)/%.o: %.c makefile | $(BUILD_DIR) 
+$(BUILD_DIR)/%.o: %.c | $(BUILD_DIR) 
 	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
 	@echo ""
 
-$(BUILD_DIR)/%.o: %.cpp makefile | $(BUILD_DIR) 
+$(BUILD_DIR)/%.o: %.cpp | $(BUILD_DIR) 
 	$(CPP_CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.cpp=.lst)) $< -o $@
 	@echo ""
 
-$(BUILD_DIR)/%.o: %.s makefile | $(BUILD_DIR)
+$(BUILD_DIR)/%.o: %.s | $(BUILD_DIR)
 	$(AS) -c $(CFLAGS) $< -o $@
 	@echo ""
 
-$(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) makefile
-	$(CPP_CC) $(OBJECTS) ./WLoopCAN/bin/wloop_can.a $(LDFLAGS) -o $@
+$(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) | libs
+	$(CPP_CC) $(OBJECTS) ./WLoopCAN/bin/wloop_can.a ./WLoopUtil/bin/wloop_util.a $(LDFLAGS) -o $@
 	@echo ""
 	$(SZ) $@
 	@echo ""
@@ -196,11 +198,17 @@ $(BUILD_DIR):
 	mkdir $@
 	@echo ""
 
+libs:
+	cd WLoopCAN && make $(BOARD)
+	cd WLoopUtil && make $(BOARD)
+
 #######################################
 # clean up
 #######################################
 clean:
 	rm -rf $(BUILD_DIR)
+	rm -rf ./WLoopCAN/bin
+	rm -rf ./WLoopUtil/bin
 
 analyze:
 	$(PREFIX)objdump -t $(BUILD_DIR)/$(TARGET).elf
