@@ -11,6 +11,15 @@
 RTOSThread MeasurementsThread::thread;
 uint16_t MeasurementsThread::ADC_buffer[];
 
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
+    HAL_StatusTypeDef status = HAL_ADC_Stop_DMA(hadc);
+    if(status != HAL_OK) {
+        printf("Error: HAL_ADC_Stop_DMA failed with status code %d\r\n", status);
+        Error_Handler();
+    }
+    osThreadFlagsSet(MeasurementsThread::getThreadId(), 0x00000001U);        // set flag to signal that ADC conversion has completed
+}
+
 void MeasurementsThread::initialize(){
     thread = RTOSThread(
         "measurements_thread",
@@ -21,14 +30,6 @@ void MeasurementsThread::initialize(){
 
 }
 
-void MeasurementsThread::HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
-    HAL_StatusTypeDef status = HAL_ADC_Stop_DMA(hadc);
-    if(status != HAL_OK) {
-        printf("Error: HAL_ADC_Stop_DMA failed with status code %d\r\n", status);
-        Error_Handler();
-    }
-    osThreadFlagsSet(thread.getThreadId(), 0x00000001U);        // set flag to signal that ADC conversion has completed
-}
 
 void MeasurementsThread::processData() {
     for (uint8_t i{0}; i < ADC_NUM_CONVERSIONS; i++) {
@@ -79,4 +80,8 @@ void MeasurementsThread::stopMeasurements() {
 void MeasurementsThread::resumeMeasurements() {
     osThreadResume(thread.getThreadId());
 }
+
+osThreadId_t MeasurementsThread::getThreadId() {
+    return thread.getThreadId();
+} 
 
