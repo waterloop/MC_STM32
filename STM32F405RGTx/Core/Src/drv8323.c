@@ -35,6 +35,8 @@ Drv8323 Drv8323_init() {
 
 Drv8323_Status Drv8323_commit(Drv8323* self) {
     uint16_t* reg_table[7] = {
+        NULL,
+        NULL,
         &(self->DRIVER_CONTROL),
         &(self->GATE_DRIVE_HS),
         &(self->GATE_DRIVE_LS),
