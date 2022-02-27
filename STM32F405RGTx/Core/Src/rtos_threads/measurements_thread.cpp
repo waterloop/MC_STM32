@@ -5,11 +5,12 @@
 #include "mc.hpp"
 #include "cmsis_os.h"
 #include "threads.hpp"
+#include "lut.hpp"
 
-// TODO: add defines here for conversions..
 #define CURRENT_SENSE_RESISTANCE                1E-3
 #define ADC_TO_VOLTAGE(adc)                     ( adc * (3.3/(1 << 12)) )
 #define VOLTAGE_TO_CURRENT(voltage)             (voltage / CURRENT_SENSE_RESISTANCE)
+#define VOLTAGE_TO_RESISTANCE(voltage)          ( -10000 / (voltage - 3.3) )
 #define VOLTAGE_DIVIDER_CONVERSION(voltage)     ( voltage * 17.25 )
 
 RTOSThread MeasurementsThread::thread;
@@ -47,36 +48,41 @@ void MeasurementsThread::processData() {
 
             // read and convert phase voltages and dc voltage
             case 0:
-               g_mc_data.pVa =          VOLTAGE_DIVIDER_CONVERSION( ADC_TO_VOLTAGE( val ) );
+               g_mc_data.pVa = VOLTAGE_DIVIDER_CONVERSION( ADC_TO_VOLTAGE( val ) );
             case 1:
-               g_mc_data.pVb =          VOLTAGE_DIVIDER_CONVERSION( ADC_TO_VOLTAGE( val ) );
+               g_mc_data.pVb = VOLTAGE_DIVIDER_CONVERSION( ADC_TO_VOLTAGE( val ) );
             case 2:
-               g_mc_data.pVc =          VOLTAGE_DIVIDER_CONVERSION( ADC_TO_VOLTAGE( val ) );
+               g_mc_data.pVc = VOLTAGE_DIVIDER_CONVERSION( ADC_TO_VOLTAGE( val ) );
             case 3:
-               g_mc_data.dc_voltage =   VOLTAGE_DIVIDER_CONVERSION( ADC_TO_VOLTAGE( val ) );
+               g_mc_data.dc_voltage = VOLTAGE_DIVIDER_CONVERSION( ADC_TO_VOLTAGE( val ) );
 
             // read and convert phase currents
             case 4:
-               g_mc_data.pIa =          VOLTAGE_TO_CURRENT( val );
+               g_mc_data.pIa = VOLTAGE_TO_CURRENT( val );
             case 5:
-               g_mc_data.pIb =          VOLTAGE_TO_CURRENT( val );
+               g_mc_data.pIb = VOLTAGE_TO_CURRENT( val );
             case 6:
-               g_mc_data.pIc =          VOLTAGE_TO_CURRENT( val );
+               g_mc_data.pIc = VOLTAGE_TO_CURRENT( val );
 
             // read and convert adc temperatures
-            // TODO: need to figure out how to convert these values
             // NOTE: the ordering might change depending physical arrangement later on
             case 7:
-               g_mc_data.dc_cap_temp =  111;
+            // Note: dc_cap_temp dne for Powerboard rev 2 but will for the next rev
+               val = ADC_TO_VOLTAGE(val);
+               val = VOLTAGE_TO_RESISTANCE(val);
+               g_mc_data.dc_cap_temp =  ADC_TO_TEMP_LUT[val];
             case 8:
-               g_mc_data.fet_temps[0] = 111;
+               val = ADC_TO_VOLTAGE(val);
+               val = VOLTAGE_TO_RESISTANCE(val);
+               g_mc_data.fet_temps[0] = ADC_TO_TEMP_LUT[val];
             case 9:
-               g_mc_data.fet_temps[1] = 111;
+               val = ADC_TO_VOLTAGE(val);
+               val = VOLTAGE_TO_RESISTANCE(val);
+               g_mc_data.fet_temps[1] = ADC_TO_TEMP_LUT[val];
             case 10:
-               g_mc_data.fet_temps[2] = 111;
-
-            case 111:
-                printf("Val = %lx\r\n", val);
+               val = ADC_TO_VOLTAGE(val);
+               val = VOLTAGE_TO_RESISTANCE(val);
+               g_mc_data.fet_temps[2] = ADC_TO_TEMP_LUT[val];
 
         }
 
