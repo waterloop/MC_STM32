@@ -21,7 +21,7 @@ class MC {
         
         // MOSFET
         float fet_temps[3];
-        // Note: dc_cap_temp dne for g5.5 but does for g6 logic board
+        // Note: dc_cap_temp dne for Powerboard rev 2 but will for the next rev
         float dc_cap_temp;
         
         // Current position, speed, and acceleration
