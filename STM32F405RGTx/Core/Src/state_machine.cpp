@@ -13,12 +13,13 @@ void MCStateMachine::SetLedColour(float R, float G, float B)
     set_led_intensity(BLUE, B);
 }
 
-void SendCANHeartbeat(void)
+void MCStateMachine::SendCANHeartbeat(void)
 {
     float avg_MC_current = (MotorControllerData.pIa + MotorControllerData.pIb + MotorControllerData.pIc) / 3;
 
     CANFrame tx_frame0 = CANFrame_init(POD_SPEED.id);
     CANFrame_set_field(&tx_frame0, POD_SPEED, FLOAT_TO_UINT(MotorControllerData.cur_speed));
+    // What value to use for motor_current
     CANFrame_set_field(&tx_frame0, MOTOR_CURRENT, FLOAT_TO_UINT(MotorControllerData.cur_speed));
 
     CANFrame tx_frame1 = CANFrame_init(BATTERY_CURRENT.id);
@@ -42,7 +43,7 @@ State_t MCStateMachine::NormalFaultChecking(void)
     int undervolt_faults = 0;
     int temp_faults = 0;
     // check for temperature faults
-    for (int i = 0; i < NUM_MOSFETS; ++i)
+    for (int i = 0; i < NUM_MOSFETS; ++i) 
     {
         float mosfetTemp = MotorControllerData.FET_temps[i];
         if (mosfetTemp > MAX_MOSFET_TEMP_NORMAL)
@@ -56,8 +57,7 @@ State_t MCStateMachine::NormalFaultChecking(void)
         }
     }
     // check undervolts and overvolts for phase outputs
-    if (MotorControllerData.pVa < MIN_VOLTAGE_NORMAL)
-    {
+    if (MotorControllerData.pVa < MIN_VOLTAGE_NORMAL) {
         undervolt_faults++;
     }
     if (MotorControllerData.pVb < MIN_VOLTAGE_NORMAL)
@@ -82,24 +82,27 @@ State_t MCStateMachine::NormalFaultChecking(void)
         overvolt_faults++;
     }
 
+    //  TODO: after checking for faults return state
+
+
     // Check current for phase outputs
     if (MotorControllerData.pIa > MAX_CURRENT_NORMAL || MotorControllerData.pIb > MAX_CURRENT_NORMAL || MotorControllerData.pIc > MAX_CURRENT_NORMAL)
     {
-        // error code
+        //TODO: error code
         return NormalDangerFault;
     }
 
     // DC fault checking
     if (dc_voltage > MAX_DCVOLTAGE_NORMAL)
     {
-        // error code
+        // TODO: error code
         return NormalDangerFault;
     }
     else if (dc_voltage < MIN_DCVOLTAGE_NORMAL)
     {
         return NormalDangerFault;
     }
-    // what does cap temp mean for dc_cap_temp
+    // TODO: check for normal_temp and severe_temp for dc_cap_temp
     return NoFault;
 }
 
@@ -206,7 +209,7 @@ State_t MCStateMachine::IdleEvent(void)
     return Idle;
 }
 
-State_t AutoPilotEvent(void)
+State_t MCStateMachine::AutoPilotEvent(void)
 {
     // Set LED colour to yellow
     SetLEDColour(50.0, 50.0, 0.0);
@@ -246,7 +249,7 @@ State_t AutoPilotEvent(void)
     return Idle;
 }
 
-State_t ManualControl(void)
+State_t MCStateMachine::ManualControlEvent(void)
 {
     // Set LED colour to blue
     SetLEDColour(0, 0, 50.0);
@@ -286,7 +289,7 @@ State_t ManualControl(void)
     return Idle;
 }
 
-State_t InitializeFaultEvent(void)
+State_t MCStateMachine::InitializeFaultEvent(void)
 {
 
     CANFrame tx_frame = CANFrame_init(MC_SEVERITY_CODE.id);
@@ -310,13 +313,13 @@ State_t InitializeFaultEvent(void)
     return InitializeFault;
 }
 
-State_t NormalDangerFaultEvent(void)
+State_t MCStateMachine::NormalDangerFaultEvent(void)
 {
     // Set LED colour to red
     SetLEDColour(50.00, 0.0, 0.0);
 
     // Report fault on CAN
-    CANFrame tx_frame = CANFrame_init(BMS_SEVERITY_CODE.id);
+    CANFrame tx_frame = CANFrame_init(MC_SEVERITY_CODE.id);
     CANFrame_set_field(&tx_frame, MC_SEVERITY_CODE, DANGER);
     CANFrame_set_field(&tx_frame, ERROR_CODE, mc_error_code);
     if (CANBus_put_frame(&tx_frame) != HAL_OK)
@@ -341,7 +344,7 @@ State_t NormalDangerFaultEvent(void)
     return NormalDangerFault;
 }
 
-State_t SevereDangerFault(void)
+State_t MCStateMachine::SevereDangerFaultEvent(void)
 {
     // Set LED colour to red
     SetLEDColour(50.00, 0.0, 0.0);
