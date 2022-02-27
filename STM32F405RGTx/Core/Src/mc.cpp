@@ -4,6 +4,7 @@
 #include "drv8323.h"
 #include "mc.hpp"
 #include "threads.hpp"
+#include "can.h"
 
 Drv8323 drv8323;
 
@@ -19,6 +20,9 @@ uint8_t __io_getchar() {
 }
 
 int mc_entry() {
+    CANBus_subscribe(MANUAL_CONTROL_1);
+    CANBus_subscribe(STATE_CHANGE_REQ);
+
     printf("initializing drivers...\r\n");
     drv8323 = Drv8323_init();
 
@@ -28,6 +32,7 @@ int mc_entry() {
     printf("initializing rtos threads...\r\n");
     
     MeasurementsThread::initialize();
+    MCStateMachine::initialize();
 
     printf("starting rtos scheduler...\r\n");
     osKernelStart();

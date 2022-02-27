@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include <string.h>
-#include "state_machine.h"
-#include "threads.h"
+#include "state_machine.hpp"
+#include "threads.hpp"
 #include "cmsis_os.h"
 #include "main.h"
+#include "mc.hpp"
 #include "can.h"
 
 void MCStateMachine::SetLedColour(float R, float G, float B)
@@ -15,16 +16,16 @@ void MCStateMachine::SetLedColour(float R, float G, float B)
 
 void MCStateMachine::SendCANHeartbeat(void)
 {
-    float avg_MC_current = (MotorControllerData.pIa + MotorControllerData.pIb + MotorControllerData.pIc) / 3;
+    float avg_MC_current = (global_mc_data.pIa + global_mc_data.pIb + global_mc_data.pIc) / 3;
 
     CANFrame tx_frame0 = CANFrame_init(POD_SPEED.id);
-    CANFrame_set_field(&tx_frame0, POD_SPEED, FLOAT_TO_UINT(MotorControllerData.cur_speed));
+    CANFrame_set_field(&tx_frame0, POD_SPEED, FLOAT_TO_UINT(global_mc_data.curr_speed));
     // What value to use for motor_current
-    CANFrame_set_field(&tx_frame0, MOTOR_CURRENT, FLOAT_TO_UINT(MotorControllerData.cur_speed));
+    CANFrame_set_field(&tx_frame0, MOTOR_CURRENT, FLOAT_TO_UINT(global_mc_data.curr_speed));
 
     CANFrame tx_frame1 = CANFrame_init(BATTERY_CURRENT.id);
-    CANFrame_set_field(&tx_frame1, BATTERY_CURRENT, FLOAT_TO_UINT(global_bms_data.battery.current));
-    CANFrame_set_field(&tx_frame1, BATTERY_PACK_VOLTAGE, FLOAT_TO_UINT(global_bms_data.battery.voltage));
+    CANFrame_set_field(&tx_frame1, BATTERY_CURRENT, FLOAT_TO_UINT(global_mc_data.battery.current));
+    CANFrame_set_field(&tx_frame1, BATTERY_PACK_VOLTAGE, FLOAT_TO_UINT(global_mc_data.battery.voltage));
 
     if (CANBus_put_frame(&tx_frame0) != HAL_OK)
     {
@@ -45,7 +46,7 @@ State_t MCStateMachine::NormalFaultChecking(void)
     // check for temperature faults
     for (int i = 0; i < NUM_MOSFETS; ++i) 
     {
-        float mosfetTemp = MotorControllerData.FET_temps[i];
+        float mosfetTemp = global_mc_data.FET_temps[i];
         if (mosfetTemp > MAX_MOSFET_TEMP_NORMAL)
         {
             ++temp_faults;
@@ -57,27 +58,28 @@ State_t MCStateMachine::NormalFaultChecking(void)
         }
     }
     // check undervolts and overvolts for phase outputs
-    if (MotorControllerData.pVa < MIN_VOLTAGE_NORMAL) {
-        undervolt_faults++;
-    }
-    if (MotorControllerData.pVb < MIN_VOLTAGE_NORMAL)
+    if (global_mc_data.pVa < MIN_VOLTAGE_NORMAL)
     {
         undervolt_faults++;
     }
-    if (MotorControllerData.pVc < MIN_VOLTAGE_NORMAL)
+    if (global_mc_data.pVb < MIN_VOLTAGE_NORMAL)
+    {
+        undervolt_faults++;
+    }
+    if (global_mc_data.pVc < MIN_VOLTAGE_NORMAL)
     {
         undervolt_faults++;
     }
 
-    if (MotorControllerData.pVa > MAX_VOLTAGE_NORMAL)
+    if (global_mc_data.pVa > MAX_VOLTAGE_NORMAL)
     {
         overvolt_faults++;
     }
-    if (MotorControllerData.pVb > MAX_VOLTAGE_NORMAL)
+    if (global_mc_data.pVb > MAX_VOLTAGE_NORMAL)
     {
         overvolt_faults++;
     }
-    if (MotorControllerData.pVc > MAX_VOLTAGE_NORMAL)
+    if (global_mc_data.pVc > MAX_VOLTAGE_NORMAL)
     {
         overvolt_faults++;
     }
@@ -86,19 +88,19 @@ State_t MCStateMachine::NormalFaultChecking(void)
 
 
     // Check current for phase outputs
-    if (MotorControllerData.pIa > MAX_CURRENT_NORMAL || MotorControllerData.pIb > MAX_CURRENT_NORMAL || MotorControllerData.pIc > MAX_CURRENT_NORMAL)
+    if (global_mc_data.pIa > MAX_CURRENT_NORMAL || global_mc_data.pIb > MAX_CURRENT_NORMAL || global_mc_data.pIc > MAX_CURRENT_NORMAL)
     {
         //TODO: error code
         return NormalDangerFault;
     }
 
     // DC fault checking
-    if (dc_voltage > MAX_DCVOLTAGE_NORMAL)
+    if (global_mc_data.dc_voltage > MAX_DCVOLTAGE_NORMAL)
     {
         // TODO: error code
         return NormalDangerFault;
     }
-    else if (dc_voltage < MIN_DCVOLTAGE_NORMAL)
+    else if (global_mc_data.dc_voltage < MIN_DCVOLTAGE_NORMAL)
     {
         return NormalDangerFault;
     }
@@ -160,7 +162,7 @@ State_t MCStateMachine::SevereFaultChecking(void)
     }
 
     // DC fault checking
-    if (dc_voltage > MAX_DCVOLTAGE_SEVERE)
+    if (global_mc_data.dc_voltage > MAX_DCVOLTAGE_SEVERE)
     {
         // error code
         return SevereDangerFault;
@@ -192,7 +194,7 @@ State_t MCStateMachine::IdleEvent(void)
         return normal_fault_check;
     }
 
-    // need to understand pins
+    // TODO: Make list of the threads that need to be turned on or turned off
 
     if (!Queue_empty(&RX_QUEUE))
     {
@@ -203,7 +205,7 @@ State_t MCStateMachine::IdleEvent(void)
         {
             return AutoPilot;
         }
-        else if (state_id == MANUAL_OPERATION_WAITING)
+        else if (state_id == MANUAL_OPERATION_WAITING) // TODO: return ManualControl
     }
 
     return Idle;
@@ -212,9 +214,10 @@ State_t MCStateMachine::IdleEvent(void)
 State_t MCStateMachine::AutoPilotEvent(void)
 {
     // Set LED colour to yellow
-    SetLEDColour(50.0, 50.0, 0.0);
+    SetLedColour(50.0, 50.0, 0.0);
 
-    // Send ACK on CAN when stop complete
+    // Send ACK on CAN when stop complete 
+    // TODO: Maintain Current State and NewState only send ACK when NewState != Current
     CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_STATE_CHANGE_ACK_NACK);
     CANFrame_set_field(&tx_frame, STATE_CHANGE_ACK_ID, run_state_id);
     CANFrame_set_field(&tx_frame, STATE_CHANGE_ACK, 0x00);
@@ -223,6 +226,8 @@ State_t MCStateMachine::AutoPilotEvent(void)
         Error_Handler();
     }
 
+    // TODO: Make list of the threads that need to be turned on or turned off
+
     // Receive CAN frame
     if (!Queue_empty(&RX_QUEUE))
     {
@@ -230,23 +235,15 @@ State_t MCStateMachine::AutoPilotEvent(void)
         uint8_t state_id = CANFrame_get_field(&rx_frame, STATE_ID);
         if (state_id == EMERGENCY_BRAKE || state_id == SYSTEM_FAILURE)
         {
-            State_t normal_fault_check = NormalFaultChecking();
-            State_t severe_fault_check = SevereFaultChecking();
-            if (severe_fault_check == SevereDangerFault)
-            {
-                return severe_fault_check;
-            }
-            else if (normal_fault_check == NormalDangerFault)
-            {
-                return normal_fault_check;
-            }
+            return SevereDangerFault;
+            // TODO: Talk to Ryan/Dev when to enter MinorDangerFault
         }
-        else if (state_id == BRAKING)
+        else if (state_id == BRAKING) // TODO: Determine distance travelled
         {
             return Idle;
         }
     }
-    return Idle;
+    return AutoPilot;
 }
 
 State_t MCStateMachine::ManualControlEvent(void)
@@ -255,6 +252,7 @@ State_t MCStateMachine::ManualControlEvent(void)
     SetLEDColour(0, 0, 50.0);
 
     // Send ACK on CAN when stop complete
+    // TODO: Maintain Current State and NewState only send ACK when NewState != Current
     CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_STATE_CHANGE_ACK_NACK);
     CANFrame_set_field(&tx_frame, STATE_CHANGE_ACK_ID, run_state_id);
     CANFrame_set_field(&tx_frame, STATE_CHANGE_ACK, 0x00);
@@ -264,38 +262,35 @@ State_t MCStateMachine::ManualControlEvent(void)
     }
 
     // Receive CAN frame
+    // TODO: Check if queue contains state_change instead of checking entire queue
+
+    // TODO: Make list of the threads that need to be turned on or turned off
+
     if (!Queue_empty(&RX_QUEUE))
     {
         CANFrame rx_frame = CANBus_get_frame();
         uint8_t state_id = CANFrame_get_field(&rx_frame, STATE_ID);
         if (state_id == EMERGENCY_BRAKE || state_id == SYSTEM_FAILURE)
         {
-            State_t normal_fault_check = NormalFaultChecking();
-            State_t severe_fault_check = SevereFaultChecking();
-            if (severe_fault_check == SevereDangerFault)
-            {
-                return severe_fault_check;
-            }
-            else if (normal_fault_check == NormalDangerFault)
-            {
-                return normal_fault_check;
-            }
+            return SevereDangerFault;
+            // TODO: Talk to Ryan/Dev when to enter MinorDangerFault
         }
         else if (state_id == BRAKING)
         {
             return Idle;
         }
     }
-    return Idle;
+    return ManualControl;
 }
 
 State_t MCStateMachine::InitializeFaultEvent(void)
 {
+    SetLEDColour(50.0, 0.0, 0.0);
 
+    // TODO: Maintain Current State and NewState only send ACK when NewState != Current
     CANFrame tx_frame = CANFrame_init(MC_SEVERITY_CODE.id);
     CANFrame_set_field(&tx_frame, MC_SEVERITY_CODE, INITIAL_FAULT); // dummy
     CANFrame_set_field(&tx_frame, ERROR_CODE, mc_error_code);
-    SetLEDColour(50.0, 0.0, 0.0);
     // Receive CAN frame
     if (!Queue_empty(&RX_QUEUE))
     {
@@ -317,6 +312,7 @@ State_t MCStateMachine::NormalDangerFaultEvent(void)
 {
     // Set LED colour to red
     SetLEDColour(50.00, 0.0, 0.0);
+    // TODO: Maintain Current State and NewState only send ACK when NewState != Current
 
     // Report fault on CAN
     CANFrame tx_frame = CANFrame_init(MC_SEVERITY_CODE.id);
@@ -346,8 +342,10 @@ State_t MCStateMachine::NormalDangerFaultEvent(void)
 
 State_t MCStateMachine::SevereDangerFaultEvent(void)
 {
-    // Set LED colour to red
+    // Todo: FLASH LED colour to red
     SetLEDColour(50.00, 0.0, 0.0);
+
+    // TODO: Make list of the threads that need to be turned on or turned off
 
     // Report fault on CAN
     CANFrame tx_frame = CANFrame_init(MC_SEVERITY_CODE.id);

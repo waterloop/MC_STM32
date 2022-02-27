@@ -55,11 +55,14 @@ typedef enum
 } State_t;
 
 typedef State_t (*pfEvent)(void);
+
+// TODO: Use measurements_thread.hpp to fix this
 class MCStateMachine
 {
 public:
+    void Initialize();
     void SetLedColour(float R, float G, float B);
-    void SendCanHeartBeat(void);
+    void SendCANHeartbeat(void);
     State_t State;
     pfEvent Event;
     State_t NormalFaultChecking(void);
