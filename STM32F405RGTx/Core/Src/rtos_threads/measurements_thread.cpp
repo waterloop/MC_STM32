@@ -8,10 +8,9 @@
 #include "lut.hpp"
 
 #define CURRENT_SENSE_RESISTANCE                1E-3
-#define ADC_TO_VOLTAGE(adc)                     ( adc * (3.3/(1 << 12)) )
-#define VOLTAGE_TO_CURRENT(voltage)             (voltage / CURRENT_SENSE_RESISTANCE)
-#define VOLTAGE_TO_RESISTANCE(voltage)          ( -10000 / (voltage - 3.3) )
-#define VOLTAGE_DIVIDER_CONVERSION(voltage)     ( voltage * 17.25 )
+#define ADC_TO_VOLTAGE(adc)                     ( (adc) * (3.3/(1 << 12)) )
+#define VOLTAGE_TO_CURRENT(voltage)             ((voltage) / CURRENT_SENSE_RESISTANCE)
+#define VOLTAGE_DIVIDER_CONVERSION(voltage)     ( (voltage) * (91000 + 5600)/5600 )
 
 RTOSThread MeasurementsThread::thread;
 uint16_t MeasurementsThread::ADC_buffer[];
@@ -58,30 +57,22 @@ void MeasurementsThread::processData() {
 
             // read and convert phase currents
             case 4:
-               g_mc_data.pIa = VOLTAGE_TO_CURRENT( val );
+               g_mc_data.pIa = VOLTAGE_TO_CURRENT( ADC_TO_VOLTAGE(val) );
             case 5:
-               g_mc_data.pIb = VOLTAGE_TO_CURRENT( val );
+               g_mc_data.pIb = VOLTAGE_TO_CURRENT( ADC_TO_VOLTAGE(val) );
             case 6:
-               g_mc_data.pIc = VOLTAGE_TO_CURRENT( val );
+               g_mc_data.pIc = VOLTAGE_TO_CURRENT( ADC_TO_VOLTAGE(val) );
 
             // read and convert adc temperatures
             // NOTE: the ordering might change depending physical arrangement later on
             case 7:
             // Note: dc_cap_temp dne for Powerboard rev 2 but will for the next rev
-               val = ADC_TO_VOLTAGE(val);
-               val = VOLTAGE_TO_RESISTANCE(val);
                g_mc_data.dc_cap_temp =  ADC_TO_TEMP_LUT[val];
             case 8:
-               val = ADC_TO_VOLTAGE(val);
-               val = VOLTAGE_TO_RESISTANCE(val);
                g_mc_data.fet_temps[0] = ADC_TO_TEMP_LUT[val];
             case 9:
-               val = ADC_TO_VOLTAGE(val);
-               val = VOLTAGE_TO_RESISTANCE(val);
                g_mc_data.fet_temps[1] = ADC_TO_TEMP_LUT[val];
             case 10:
-               val = ADC_TO_VOLTAGE(val);
-               val = VOLTAGE_TO_RESISTANCE(val);
                g_mc_data.fet_temps[2] = ADC_TO_TEMP_LUT[val];
 
         }

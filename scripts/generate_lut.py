@@ -14,10 +14,32 @@ import numpy as np
 COL_SIZE = 8
 
 LUT_NAME = "ADC_TO_TEMP_LUT"
-LUT_SIZE = 1 << 12
+LUT_SIZE = (1 << 12) - 1
+
+# arguments: x is the adc value ranging from 0 to 4096
 def LUT_FUNC(x):
-    return 153 + -0.376*x + 7.36E-04*(x**2) + -8.71E-07*(x**3) + \
-    6.09E-10*(x**4) + -2.55E-13*(x**5) + 6.26E-17*(x**6) + -8.29E-21*(x**7) + 4.55E-25*(x**8)
+    # resistor value at 25 C
+    r_nominal = 10000
+    # resistor value used in voltage divider
+    r1 = 10000
+    B = 3435
+    # Room temperature in Kelvin
+    room_t_kelvin = 298.15
+
+    v_out =  x * (3.3/4096)
+
+    # round here to avoid division by zero error 
+    if v_out == 3.3:
+        v_out = 3.2999999
+
+    # calculate thermistor resistance value using voltage divider equation
+    r_thermistor = (-10000 * v_out) / (v_out - 3.3)
+    
+    # Apply Steinhart-Hart equation and convert to celcius
+    T_kelvin = 1 / ( (1/298.15) + (1/B)*np.log( r_thermistor / r_nominal )  )
+    T_celcius = T_kelvin - 273.15
+    
+    return T_celcius
 
 def main():
     lut = [LUT_FUNC(x) for x in range(LUT_SIZE)]
