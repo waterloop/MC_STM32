@@ -19,7 +19,7 @@ class MC {
         float pIb;
         float pIc;
         
-        // MOSFET
+        // MOSFET and DC Link Capacitor temperatures
         float fet_temps[3];
         // Note: dc_cap_temp dne for Powerboard rev 2 but will for the next rev
         float dc_cap_temp;
