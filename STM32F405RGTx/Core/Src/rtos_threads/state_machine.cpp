@@ -6,19 +6,30 @@
 #include "main.h"
 #include "mc.hpp"
 #include "can.h"
+#include "time_utils.h"
 
-void MCStateMachine::SetLedColour(float R, float G, float B)
+RTOSThread StateMachineThread::thread;
+
+State_t StateMachineThread::CurrentState;
+State_t StateMachineThread::OldState;
+StateMachine *StateMachineThread::SM;
+
+void StateMachineThread::setState(State_t target_state) {
+    CurrentState = target_state;
+}
+
+void StateMachineThread::SetLedColour(float R, float G, float B)
 {
     set_led_intensity(RED, R);
     set_led_intensity(GREEN, G);
     set_led_intensity(BLUE, B);
 }
 
-void MCStateMachine::SendCANHeartbeat(void)
+void StateMachineThread::SendCANHeartbeat(void)
 {
     float avg_MC_current = (global_mc_data.pIa + global_mc_data.pIb + global_mc_data.pIc) / 3;
 
-    CANFrame tx_frame0 = CANFrame_init(POD_SPEED.id);
+    CANFrame tx_frame0 =  CANFrame_init(POD_SPEED.id);
     CANFrame_set_field(&tx_frame0, POD_SPEED, FLOAT_TO_UINT(global_mc_data.curr_speed));
     // What value to use for motor_current
     CANFrame_set_field(&tx_frame0, MOTOR_CURRENT, FLOAT_TO_UINT(global_mc_data.curr_speed));
@@ -27,18 +38,12 @@ void MCStateMachine::SendCANHeartbeat(void)
     CANFrame_set_field(&tx_frame1, BATTERY_CURRENT, FLOAT_TO_UINT(global_mc_data.battery.current));
     CANFrame_set_field(&tx_frame1, BATTERY_PACK_VOLTAGE, FLOAT_TO_UINT(global_mc_data.battery.voltage));
 
-    if (CANBus_put_frame(&tx_frame0) != HAL_OK)
-    {
-        Error_Handler();
-    }
-    if (CANBus_put_frame(&tx_frame1) != HAL_OK)
-    {
-        Error_Handler();
-    }
+    if (CANBus_put_frame(&tx_frame0) != HAL_OK) { Error_Handler(); }
+    if (CANBus_put_frame(&tx_frame1) != HAL_OK) { Error_Handler(); }
 }
 
 // Returns normal fault state or no fault based on current, voltage, and temperature measurements
-State_t MCStateMachine::NormalFaultChecking(void)
+State_t StateMachineThread::NormalFaultChecking(void)
 {
     int overvolt_faults = 0;
     int undervolt_faults = 0;
@@ -46,7 +51,7 @@ State_t MCStateMachine::NormalFaultChecking(void)
     // check for temperature faults
     for (int i = 0; i < NUM_MOSFETS; ++i) 
     {
-        float mosfetTemp = global_mc_data.FET_temps[i];
+        float mosfetTemp = global_mc_data.fet_temps[i];
         if (mosfetTemp > MAX_MOSFET_TEMP_NORMAL)
         {
             ++temp_faults;
@@ -85,7 +90,12 @@ State_t MCStateMachine::NormalFaultChecking(void)
     }
 
     //  TODO: after checking for faults return state
-
+    if (overvolt_faults > MIN_OVERVOLT_FAULTS) {
+        return NormalDangerFault;
+    }
+    if (undervolt_faults > MIN_UNDERVOLT_FAULTS) {
+        return NormalDangerFault;
+    }
 
     // Check current for phase outputs
     if (global_mc_data.pIa > MAX_CURRENT_NORMAL || global_mc_data.pIb > MAX_CURRENT_NORMAL || global_mc_data.pIc > MAX_CURRENT_NORMAL)
@@ -104,11 +114,12 @@ State_t MCStateMachine::NormalFaultChecking(void)
     {
         return NormalDangerFault;
     }
+
     // TODO: check for normal_temp and severe_temp for dc_cap_temp
     return NoFault;
 }
 
-State_t MCStateMachine::SevereFaultChecking(void)
+State_t StateMachineThread::SevereFaultChecking(void)
 {
     int overvolt_faults = 0;
     int undervolt_faults = 0;
@@ -116,7 +127,7 @@ State_t MCStateMachine::SevereFaultChecking(void)
     // check for temperature faults
     for (int i = 0; i < NUM_MOSFETS; ++i)
     {
-        float mosfetTemp = MotorControllerData.FET_temps[i];
+        float mosfetTemp = global_mc_data.fet_temps[i];
         if (mosfetTemp > MAX_MOSFET_TEMP_SEVERE)
         {
             ++temp_faults;
@@ -128,34 +139,42 @@ State_t MCStateMachine::SevereFaultChecking(void)
         }
     }
     // check undervolts and overvolts for phase outputs
-    if (MotorControllerData.pVa < MIN_VOLTAGE_SEVERE)
+    if (global_mc_data.pVa < MIN_VOLTAGE_SEVERE)
     {
         undervolt_faults++;
     }
-    if (MotorControllerData.pVb < MIN_VOLTAGE_SEVERE)
+    if (global_mc_data.pVb < MIN_VOLTAGE_SEVERE)
     {
         undervolt_faults++;
     }
-    if (MotorControllerData.pVc < MIN_VOLTAGE_SEVERE)
+    if (global_mc_data.pVc < MIN_VOLTAGE_SEVERE)
     {
         undervolt_faults++;
     }
 
-    if (MotorControllerData.pVa > MAX_VOLTAGE_SEVERE)
+    if (global_mc_data.pVa > MAX_VOLTAGE_SEVERE)
     {
         overvolt_faults++;
     }
-    if (MotorControllerData.pVb > MAX_VOLTAGE_SEVERE)
+    if (global_mc_data.pVb > MAX_VOLTAGE_SEVERE)
     {
         overvolt_faults++;
     }
-    if (MotorControllerData.pVc > MAX_VOLTAGE_SEVERE)
+    if (global_mc_data.pVc > MAX_VOLTAGE_SEVERE)
     {
         overvolt_faults++;
+    }
+
+    //  TODO: after checking for faults return state
+    if (overvolt_faults > MIN_OVERVOLT_FAULTS) {
+        return NormalDangerFault;
+    }
+    if (undervolt_faults > MIN_UNDERVOLT_FAULTS) {
+        return NormalDangerFault;
     }
 
     // Check current for phase outputs
-    if (MotorControllerData.pIa > MAX_CURRENT_SEVERE || MotorControllerData.pIb > MAX_CURRENT_SEVERE || MotorControllerData.pIc > MAX_CURRENT_SEVERE)
+    if (global_mc_data.pIa > MAX_CURRENT_SEVERE || global_mc_data.pIb > MAX_CURRENT_SEVERE || global_mc_data.pIc > MAX_CURRENT_SEVERE)
     {
         // error code
         return SevereDangerFault;
@@ -167,22 +186,23 @@ State_t MCStateMachine::SevereFaultChecking(void)
         // error code
         return SevereDangerFault;
     }
-    else if (dc_voltage < MIN_DCVOLTAGE_SEVERE)
+    else if (global_mc_data.dc_voltage < MIN_DCVOLTAGE_SEVERE)
     {
+        // error code
         return SevereDangerFault;
     }
     // what does cap temp mean for dc_cap_temp
     return NoFault;
 }
 
-State_t MCStateMachine::InitializeEvent(void)
+State_t StateMachineThread::InitializeEvent(void)
 {
     return Idle;
 }
 
-State_t MCStateMachine::IdleEvent(void)
+State_t StateMachineThread::IdleEvent(void)
 {
-    SetLEDColour(0.0, 50.0, 0.0);
+    SetLedColour(0.0, 50.0, 0.0);
     State_t normal_fault_check = NormalFaultChecking();
     State_t severe_fault_check = SevereFaultChecking();
     if (severe_fault_check == SevereDangerFault)
@@ -211,7 +231,7 @@ State_t MCStateMachine::IdleEvent(void)
     return Idle;
 }
 
-State_t MCStateMachine::AutoPilotEvent(void)
+State_t StateMachineThread::AutoPilotEvent()
 {
     // Set LED colour to yellow
     SetLedColour(50.0, 50.0, 0.0);
@@ -246,10 +266,10 @@ State_t MCStateMachine::AutoPilotEvent(void)
     return AutoPilot;
 }
 
-State_t MCStateMachine::ManualControlEvent(void)
+State_t StateMachineThread::ManualControlEvent(void)
 {
     // Set LED colour to blue
-    SetLEDColour(0, 0, 50.0);
+    SetLedColour(0, 0, 50.0);
 
     // Send ACK on CAN when stop complete
     // TODO: Maintain Current State and NewState only send ACK when NewState != Current
@@ -283,9 +303,9 @@ State_t MCStateMachine::ManualControlEvent(void)
     return ManualControl;
 }
 
-State_t MCStateMachine::InitializeFaultEvent(void)
+State_t StateMachineThread::InitializeFaultEvent(void)
 {
-    SetLEDColour(50.0, 0.0, 0.0);
+    SetLedColour(50.0, 0.0, 0.0);
 
     // TODO: Maintain Current State and NewState only send ACK when NewState != Current
     CANFrame tx_frame = CANFrame_init(MC_SEVERITY_CODE.id);
@@ -308,10 +328,10 @@ State_t MCStateMachine::InitializeFaultEvent(void)
     return InitializeFault;
 }
 
-State_t MCStateMachine::NormalDangerFaultEvent(void)
+State_t StateMachineThread::NormalDangerFaultEvent(void)
 {
     // Set LED colour to red
-    SetLEDColour(50.00, 0.0, 0.0);
+    SetLedColour(50.00, 0.0, 0.0);
     // TODO: Maintain Current State and NewState only send ACK when NewState != Current
 
     // Report fault on CAN
@@ -340,10 +360,10 @@ State_t MCStateMachine::NormalDangerFaultEvent(void)
     return NormalDangerFault;
 }
 
-State_t MCStateMachine::SevereDangerFaultEvent(void)
+State_t StateMachineThread::SevereDangerFaultEvent(void)
 {
     // Todo: FLASH LED colour to red
-    SetLEDColour(50.00, 0.0, 0.0);
+    SetLedColour(50.00, 0.0, 0.0);
 
     // TODO: Make list of the threads that need to be turned on or turned off
 
@@ -371,4 +391,13 @@ State_t MCStateMachine::SevereDangerFaultEvent(void)
         }
     }
     return NormalDangerFault;
+}
+
+void StateMachineThread::runStateMachine(void *args) {
+    while (1) {
+        OldState = CurrentState;
+        CurrentState = (*StateMachineThread::SM[CurrentState].Event)();
+        SendCANHeartbeat();
+        osDelay(200);
+    }
 }

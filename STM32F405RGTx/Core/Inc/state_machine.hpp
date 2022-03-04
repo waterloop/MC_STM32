@@ -57,24 +57,38 @@ typedef enum
 typedef State_t (*pfEvent)(void);
 
 // TODO: Use measurements_thread.hpp to fix this
-class MCStateMachine
-{
-public:
-    void Initialize();
-    void SetLedColour(float R, float G, float B);
-    void SendCANHeartbeat(void);
+
+typedef struct {
     State_t State;
     pfEvent Event;
-    State_t NormalFaultChecking(void);
-    State_t SevereFaultChecking(void);
-    State_t InitializeEvent(void);
-    State_t InitializeFaultEvent(void);
-    State_t IdleEvent(void);
-    State_t MinorDangerFaultEvent(void);
-    State_t AutoPilotEvent(void);
-    State_t SevereDangerFaultEvent(void);
-    State_t ManualControlEvent(void);
-    State_t AutoPilotEvent(void);
+} StateMachine;
+
+class StateMachineThread{
+    public:
+        static void initialize();
+        static void setState(State_t state);
+
+        static StateMachine *SM;
+
+    private:
+        static RTOSThread thread;
+        static State_t CurrentState;
+        static State_t OldState;
+
+        static void runStateMachine(void *arg);
+
+        static void SetLedColour(float R, float G, float B);
+        static void SendCANHeartbeat(void);
+        static State_t NormalFaultChecking(void);
+        static State_t SevereFaultChecking(void);
+        static State_t InitializeEvent(void);
+        static State_t InitializeFaultEvent(void);
+        static State_t IdleEvent(void);
+        static State_t MinorDangerFaultEvent(void);
+        static State_t AutoPilotEvent(void);
+        static State_t SevereDangerFaultEvent(void);
+        static State_t ManualControlEvent(void);
+        static State_t AutoPilotEvent(void);
 };
 
 #endif
