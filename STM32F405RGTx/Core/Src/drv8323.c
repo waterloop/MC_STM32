@@ -30,7 +30,33 @@ Drv8323 Drv8323_init() {
 
     Drv8323_read_all(&ret);
 
+    // put all the mosfets in Hi-Z for now to avoid damaging
+    // the FETs while initializing...
+    ret.DRIVER_CONTROL |= (1U << DRIVER_CONTROL_COAST);
+    Drv8323_commit(&ret);
+
+    // set the gate source and sink currents to the lowest setting...
+    ret.GATE_DRIVE_HS &= ~(0b1111U << GATE_DRIVE_HS_IDRIVEP_HS);
+    ret.GATE_DRIVE_HS &= ~(0b1111U << GATE_DRIVE_HS_IDRIVEN_HS);
+    ret.GATE_DRIVE_LS &= ~(0b1111U << GATE_DRIVE_HS_IDRIVEP_HS);
+    ret.GATE_DRIVE_LS &= ~(0b1111U << GATE_DRIVE_HS_IDRIVEN_HS);
+
+    // set deadtime to max...
+    ret.OCP_CONTROL |= (0b11U << OCP_CONTROL_DEAD_TIME);
+
     return ret;
+}
+
+Drv8323_Status Drv8323_fault_status(Drv8323* self, uint8_t* has_fault) {
+    if (HAL_GPIO_ReadPin(NFAULT_GPIO_Port, NFAULT_Pin) != 0) {
+        *has_fault = 0U;
+        return DRV8323_OK;
+    }
+    else {
+        Drv8323_Status status = Drv8323_read_all(self);
+        *has_fault = 1U;
+        return status;
+    }
 }
 
 Drv8323_Status Drv8323_commit(Drv8323* self) {
