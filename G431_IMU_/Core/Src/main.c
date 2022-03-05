@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <string.h>
+#include <math.h>
 #include <stdio.h>
 #include <time.h>
 /* USER CODE END Includes */
@@ -33,6 +34,36 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define IMU_ADDR 0x19<<1	//| Use 8-bit address
+#define REG_CTRL_1   0x20 	//| Control Register-1
+#define REG_CTRL_4   0x23 	//| Control Register-4
+#define REG_X_L 	  0x28 	//| X-Axis LSB
+#define REG_X_H 	  0x29		//| X-Axis MSB
+#define REG_Y_L 	  0x2A		//| Y-Axis LSB
+#define REG_Y_H 	  0x2B		//| Y-Axis MSB
+#define REG_Z_L 	  0x2C		//| Z-Axis LSB
+#define REG_Z_H 	  0x2D		//| Z-Axis MSB
+
+//Constants used to convert raw acceleration based on range
+#define ACC_RANGE_2G   16384
+#define ACC_RANGE_4G   8192
+#define ACC_RANGE_8G   4096
+#define ACC_RANGE_16G   2048
+
+//Control register 4 values to change acceleration range
+#define CTRL_REG_4_ACCL_RANGE_16G               0x30 // Full scale   +/-16g
+#define CTRL_REG_4_ACCL_RANGE_8G                0x20 // Full scale   +/-8g
+#define CTRL_REG_4_ACCL_RANGE_4G                0x10 // Full scale   +/-4g
+#define CTRL_REG_4_ACCL_RANGE_2G                0x00 //Full scale = +/-2g
+
+//Selected acceleration range
+#define SELECTED_ACC_RANGE ACC_RANGE_2G
+#define SELECTED_CTRL_REG_4_ACCL_RANGE CTRL_REG_4_ACCL_RANGE_2G
+
+#define GRAVITATIONAL_CONSTANT 9.8
+
+
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -46,33 +77,7 @@ I2C_HandleTypeDef hi2c1;
 UART_HandleTypeDef hlpuart1;
 
 /* USER CODE BEGIN PV */
-static const uint8_t IMU_ADDR = 0x19<<1; 	//| Use 8-bit address
-static const uint8_t REG_CTRL_1 = 0x20; 	//| Control Register-1
-static const uint8_t REG_CTRL_4 = 0x23; 	//| Control Register-4
-static const uint8_t REG_X_L 	= 0x28; 	//| X-Axis LSB
-static const uint8_t REG_X_H 	= 0x29;		//| X-Axis MSB
-static const uint8_t REG_Y_L 	= 0x2A;		//| Y-Axis LSB
-static const uint8_t REG_Y_H 	= 0x2B;		//| Y-Axis MSB
-static const uint8_t REG_Z_L 	= 0x2C;		//| Z-Axis LSB
-static const uint8_t REG_Z_H 	= 0x2D;		//| Z-Axis MSB
 
-//Constants used to convert raw acceleration based on range
-static const uint16_t ACC_RANGE_2G = 16384;
-static const uint16_t ACC_RANGE_4G = 8192;
-static const uint16_t ACC_RANGE_8G = 4096;
-static const uint16_t ACC_RANGE_16G = 2048;
-
-//Control register 4 values to change acceleration range
-static const uint8_t CTRL_REG_4_ACCL_RANGE_16G             = 0x30; // Full scale = +/-16g
-static const uint8_t CTRL_REG_4_ACCL_RANGE_8G              = 0x20; // Full scale = +/-8g
-static const uint8_t CTRL_REG_4_ACCL_RANGE_4G              = 0x10; // Full scale = +/-4g
-static const uint8_t CTRL_REG_4_ACCL_RANGE_2G              = 0x00; //Full scale = +/-2g
-
-//Selected acceleration range
-static const uint16_t SELECTED_ACC_RANGE = ACC_RANGE_2G;
-static const uint8_t SELECTED_CTRL_REG_4_ACCL_RANGE = CTRL_REG_4_ACCL_RANGE_2G;
-
-static const float GRAVITATIONAL_CONSTANT = 9.8;
 
 /* USER CODE END PV */
 
@@ -129,7 +134,9 @@ int main(void)
 	int PREVIOUS_TIME = 0;
 	int CURRENT_TIME = 0;
 	float TIME_DIFF = 0;
-	char buffer_msg[13];
+	char buffer_msg[50];
+
+
 
   /* USER CODE END 1 */
 
@@ -216,7 +223,7 @@ int main(void)
 
 	  //Update clock
 	  PREVIOUS_TIME = CURRENT_TIME;
-	  HAL_Delay(500);
+	  HAL_Delay(50);
 
     /* USER CODE END WHILE */
 
