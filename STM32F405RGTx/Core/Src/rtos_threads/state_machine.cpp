@@ -10,8 +10,8 @@
 
 RTOSThread StateMachineThread::thread;
 
+State_t StateMachineThread::NewState;
 State_t StateMachineThread::CurrentState;
-State_t StateMachineThread::OldState;
 StateMachine *StateMachineThread::SM;
 
 uint8_t idle_state_id;
@@ -19,7 +19,7 @@ uint8_t run_state_id;
 uint8_t mc_error_code;
 
 void StateMachineThread::setState(State_t target_state) {
-    CurrentState = target_state;
+    NewState = target_state;
 }
 
 void StateMachineThread::SetLedColour(float R, float G, float B)
@@ -41,7 +41,7 @@ void StateMachineThread::SendCANHeartbeat(void)
 
     CANFrame tx_frame1 = CANFrame_init(BATTERY_CURRENT.id);
     CANFrame_set_field(&tx_frame1, BATTERY_CURRENT, FLOAT_TO_UINT(avg_MC_current));
-    CANFrame_set_field(&tx_frame1, BATTERY_VOLTAGE, FLOAT_TO_UINT(avg_MC_current));
+    CANFrame_set_field(&tx_frame1, BATTERY_VOLTAGE, FLOAT_TO_UINT(avg_MC_voltage));
 
     if (CANBus_put_frame(&tx_frame0) != HAL_OK) { Error_Handler(); }
     if (CANBus_put_frame(&tx_frame1) != HAL_OK) { Error_Handler(); }
@@ -54,43 +54,34 @@ State_t StateMachineThread::NormalFaultChecking(void)
     int undervolt_faults = 0;
     int temp_faults = 0;
     // check for temperature faults
-    for (int i = 0; i < NUM_MOSFETS; ++i) 
-    {
+    for (int i = 0; i < NUM_MOSFETS; ++i) {
         float mosfetTemp = global_mc_data.fet_temps[i];
-        if (mosfetTemp > MAX_MOSFET_TEMP_NORMAL)
-        {
+        if (mosfetTemp > MAX_MOSFET_TEMP_NORMAL) {
             ++temp_faults;
         }
-        if (temp_faults > MIN_TEMP_FAULTS)
-        {
+        if (temp_faults > MIN_TEMP_FAULTS) {
             // TODO: add error code
             return NormalDangerFault;
         }
     }
     // check undervolts and overvolts for phase outputs
-    if (global_mc_data.pVa < MIN_VOLTAGE_NORMAL)
-    {
+    if (global_mc_data.pVa < MIN_VOLTAGE_NORMAL) {
         undervolt_faults++;
     }
-    if (global_mc_data.pVb < MIN_VOLTAGE_NORMAL)
-    {
+    if (global_mc_data.pVb < MIN_VOLTAGE_NORMAL) {
         undervolt_faults++;
     }
-    if (global_mc_data.pVc < MIN_VOLTAGE_NORMAL)
-    {
+    if (global_mc_data.pVc < MIN_VOLTAGE_NORMAL) {
         undervolt_faults++;
     }
 
-    if (global_mc_data.pVa > MAX_VOLTAGE_NORMAL)
-    {
+    if (global_mc_data.pVa > MAX_VOLTAGE_NORMAL) {
         overvolt_faults++;
     }
-    if (global_mc_data.pVb > MAX_VOLTAGE_NORMAL)
-    {
+    if (global_mc_data.pVb > MAX_VOLTAGE_NORMAL) {
         overvolt_faults++;
     }
-    if (global_mc_data.pVc > MAX_VOLTAGE_NORMAL)
-    {
+    if (global_mc_data.pVc > MAX_VOLTAGE_NORMAL) {
         overvolt_faults++;
     }
 
@@ -103,20 +94,17 @@ State_t StateMachineThread::NormalFaultChecking(void)
     }
 
     // Check current for phase outputs
-    if (global_mc_data.pIa > MAX_CURRENT_NORMAL || global_mc_data.pIb > MAX_CURRENT_NORMAL || global_mc_data.pIc > MAX_CURRENT_NORMAL)
-    {
+    if (global_mc_data.pIa > MAX_CURRENT_NORMAL || global_mc_data.pIb > MAX_CURRENT_NORMAL || global_mc_data.pIc > MAX_CURRENT_NORMAL) {
         //TODO: error code
         return NormalDangerFault;
     }
 
     // DC fault checking
-    if (global_mc_data.dc_voltage > MAX_DCVOLTAGE_NORMAL)
-    {
+    if (global_mc_data.dc_voltage > MAX_DCVOLTAGE_NORMAL) {
         // TODO: error code
         return NormalDangerFault;
     }
-    else if (global_mc_data.dc_voltage < MIN_DCVOLTAGE_NORMAL)
-    {
+    else if (global_mc_data.dc_voltage < MIN_DCVOLTAGE_NORMAL) {
         return NormalDangerFault;
     }
 
@@ -179,20 +167,17 @@ State_t StateMachineThread::SevereFaultChecking(void)
     }
 
     // Check current for phase outputs
-    if (global_mc_data.pIa > MAX_CURRENT_SEVERE || global_mc_data.pIb > MAX_CURRENT_SEVERE || global_mc_data.pIc > MAX_CURRENT_SEVERE)
-    {
+    if (global_mc_data.pIa > MAX_CURRENT_SEVERE || global_mc_data.pIb > MAX_CURRENT_SEVERE || global_mc_data.pIc > MAX_CURRENT_SEVERE) {
         // error code
         return SevereDangerFault;
     }
 
     // DC fault checking
-    if (global_mc_data.dc_voltage > MAX_DCVOLTAGE_SEVERE)
-    {
+    if (global_mc_data.dc_voltage > MAX_DCVOLTAGE_SEVERE) {
         // error code
         return SevereDangerFault;
     }
-    else if (global_mc_data.dc_voltage < MIN_DCVOLTAGE_SEVERE)
-    {
+    else if (global_mc_data.dc_voltage < MIN_DCVOLTAGE_SEVERE) {
         // error code
         return SevereDangerFault;
     }
@@ -200,22 +185,18 @@ State_t StateMachineThread::SevereFaultChecking(void)
     return NoFault;
 }
 
-State_t StateMachineThread::InitializeEvent(void)
-{
+State_t StateMachineThread::InitializeEvent(void) {
     return Idle;
 }
 
-State_t StateMachineThread::IdleEvent(void)
-{
+State_t StateMachineThread::IdleEvent(void) {
     SetLedColour(0.0, 50.0, 0.0);
     State_t normal_fault_check = NormalFaultChecking();
     State_t severe_fault_check = SevereFaultChecking();
-    if (severe_fault_check == SevereDangerFault)
-    {
+    if (severe_fault_check == SevereDangerFault) {
         return severe_fault_check;
     }
-    else if (normal_fault_check == NormalDangerFault)
-    {
+    else if (normal_fault_check == NormalDangerFault) {
         return normal_fault_check;
     }
 
@@ -225,13 +206,12 @@ State_t StateMachineThread::IdleEvent(void)
         CANFrame rx_frame = CANBus_get_frame();
         uint8_t state_id = CANFrame_get_field(&rx_frame, STATE_ID);
         idle_state_id = state_id;
-        if (state_id == AUTO_PILOT) // how do i get length of track
-        {
+        if (state_id == AUTO_PILOT) { // how do i get length of track
             return AutoPilot;
         }
         else if (state_id == MANUAL_OPERATION_WAITING) {
             return ManualControl;
-        } // TODO: return ManualControl
+        } 
     }
 
     return Idle;
@@ -243,31 +223,25 @@ State_t StateMachineThread::AutoPilotEvent(void)
     SetLedColour(50.0, 50.0, 0.0);
 
     // Send ACK on CAN when stop complete 
-    // TODO: Maintain Current State and NewState only send ACK when NewState != Current
-    CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_STATE_CHANGE_ACK_NACK);
-    CANFrame_set_field(&tx_frame, STATE_ID_ACK_NACK, idle_state_id);
-    //CANFrame_set_field(&tx_frame, STATE_ID_ACK_NACK, run_state_id);
-
-
-    if (CANBus_put_frame(&tx_frame) != HAL_OK)
-    {
-        Error_Handler();
+    if (NewState != CurrentState) {
+        CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_STATE_CHANGE_ACK_NACK);
+        CANFrame_set_field(&tx_frame, STATE_ID_ACK_NACK, idle_state_id);
+        if (CANBus_put_frame(&tx_frame) != HAL_OK) { Error_Handler(); }
     }
+
+   
 
     // TODO: Make list of the threads that need to be turned on or turned off
 
     // Receive CAN frame
-    if (!Queue_empty(&RX_QUEUE))
-    {
+    if (!Queue_empty(&RX_QUEUE)) {
         CANFrame rx_frame = CANBus_get_frame();
         uint8_t state_id = CANFrame_get_field(&rx_frame, STATE_ID);
-        if (state_id == EMERGENCY_BRAKE || state_id == SYSTEM_FAILURE)
-        {
+        if (state_id == EMERGENCY_BRAKE || state_id == SYSTEM_FAILURE) {
             return SevereDangerFault;
             // TODO: Talk to Ryan/Dev when to enter MinorDangerFault
         }
-        else if (state_id == BRAKING) // TODO: Determine distance travelled
-        {
+        else if (state_id == BRAKING) { // TODO: Determine distance travelled
             return Idle;
         }
     }
@@ -281,12 +255,10 @@ State_t StateMachineThread::ManualControlEvent(void)
 
     // Send ACK on CAN when stop complete
     // TODO: Maintain Current State and NewState only send ACK when NewState != Current
-    CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_STATE_CHANGE_ACK_NACK);
-    CANFrame_set_field(&tx_frame, STATE_ID_ACK_NACK, idle_state_id);
-    // CANFrame_set_field(&tx_frame, STATE_CHANGE_ACK, 0x00);
-    if (CANBus_put_frame(&tx_frame) != HAL_OK)
-    {
-        Error_Handler();
+    if (NewState != CurrentState) {
+        CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_STATE_CHANGE_ACK_NACK);
+        CANFrame_set_field(&tx_frame, STATE_ID_ACK_NACK, idle_state_id);
+        if (CANBus_put_frame(&tx_frame) != HAL_OK) { Error_Handler(); }
     }
 
     // Receive CAN frame
@@ -321,16 +293,13 @@ State_t StateMachineThread::InitializeFaultEvent(void)
     CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_SEVERITY_CODE, 0x01); // dummy
     CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_ERROR_CODE, mc_error_code);
     // Receive CAN frame
-    if (!Queue_empty(&RX_QUEUE))
-    {
+    if (!Queue_empty(&RX_QUEUE)) {
         CANFrame rx_frame = CANBus_get_frame();
         uint8_t state_id = CANFrame_get_field(&rx_frame, STATE_ID);
-        if (state_id == RESTING)
-        {
+        if (state_id == RESTING) {
             return Idle;
         }
-        else
-        {
+        else {
             return InitializeFault;
         }
     }
@@ -346,22 +315,18 @@ State_t StateMachineThread::NormalDangerFaultEvent(void)
     CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_SEVERITY_CODE.id);
     CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_SEVERITY_CODE, 0x01);
     CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_ERROR_CODE, mc_error_code);
-    if (CANBus_put_frame(&tx_frame) != HAL_OK)
-    {
+    if (CANBus_put_frame(&tx_frame) != HAL_OK) {
         Error_Handler();
     }
 
     // Receive CAN frame
-    if (!Queue_empty(&RX_QUEUE))
-    {
+    if (!Queue_empty(&RX_QUEUE)) {
         CANFrame rx_frame = CANBus_get_frame();
         uint8_t state_id = CANFrame_get_field(&rx_frame, STATE_ID);
-        if (state_id == RESTING)
-        {
+        if (state_id == RESTING) {
             return Idle;
         }
-        else
-        {
+        else {
             return NormalDangerFault;
         }
     }
@@ -379,22 +344,18 @@ State_t StateMachineThread::SevereDangerFaultEvent(void)
     CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_SEVERITY_CODE.id);
     CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_SEVERITY_CODE, 0x00);
     CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_ERROR_CODE, mc_error_code);
-    if (CANBus_put_frame(&tx_frame) != HAL_OK)
-    {
+    if (CANBus_put_frame(&tx_frame) != HAL_OK) {
         Error_Handler();
     }
 
     // Receive CAN frame
-    if (!Queue_empty(&RX_QUEUE))
-    {
+    if (!Queue_empty(&RX_QUEUE)) {
         CANFrame rx_frame = CANBus_get_frame();
         uint8_t state_id = CANFrame_get_field(&rx_frame, STATE_ID);
-        if (state_id == RESTING)
-        {
+        if (state_id == RESTING) {
             return Idle;
         }
-        else
-        {
+        else {
             return NormalDangerFault;
         }
     }
@@ -424,8 +385,8 @@ void StateMachineThread::initialize()
 
 void StateMachineThread::runStateMachine(void *args) {
     while (1) {
-        OldState = CurrentState;
-        CurrentState = (*StateMachineThread::SM[CurrentState].Event)();
+        CurrentState = NewState;
+        NewState = (*StateMachineThread::SM[CurrentState].Event)();
         SendCANHeartbeat();
         osDelay(200);
     }

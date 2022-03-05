@@ -5,6 +5,7 @@
 #include "mc.hpp"
 #include "threads.hpp"
 #include "can.h"
+#include "state_machine.hpp"
 
 Drv8323 drv8323;
 
@@ -32,7 +33,7 @@ int mc_entry() {
     printf("initializing rtos threads...\r\n");
     
     MeasurementsThread::initialize();
-    MCStateMachine::initialize();
+    StateMachineThread::initialize();
 
     printf("starting rtos scheduler...\r\n");
     osKernelStart();

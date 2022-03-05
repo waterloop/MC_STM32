@@ -75,7 +75,7 @@ class StateMachineThread{
     private:
         static RTOSThread thread;
         static State_t CurrentState;
-        static State_t OldState;
+        static State_t NewState;
 
         static void runStateMachine(void *arg);
 
