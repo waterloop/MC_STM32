@@ -84,8 +84,6 @@ State_t StateMachineThread::NormalFaultChecking(void)
     if (global_mc_data.pVc > MAX_VOLTAGE_NORMAL) {
         overvolt_faults++;
     }
-
-    //  TODO: after checking for faults return state
     if (overvolt_faults > MIN_OVERVOLT_FAULTS) {
         return NormalDangerFault;
     }
@@ -105,10 +103,15 @@ State_t StateMachineThread::NormalFaultChecking(void)
         return NormalDangerFault;
     }
     else if (global_mc_data.dc_voltage < MIN_DCVOLTAGE_NORMAL) {
+        // TODO: error code
         return NormalDangerFault;
     }
 
     // TODO: check for normal_temp and severe_temp for dc_cap_temp
+    if (global_mc_data.dc_cap_temp > MAX_DCCAP_TEMP_NORMAL) {
+        // TODO: error code
+        return NormalDangerFault;
+    }
     return NoFault;
 }
 
@@ -132,29 +135,23 @@ State_t StateMachineThread::SevereFaultChecking(void)
         }
     }
     // check undervolts and overvolts for phase outputs
-    if (global_mc_data.pVa < MIN_VOLTAGE_SEVERE)
-    {
+    if (global_mc_data.pVa < MIN_VOLTAGE_SEVERE) {
         undervolt_faults++;
     }
-    if (global_mc_data.pVb < MIN_VOLTAGE_SEVERE)
-    {
+    if (global_mc_data.pVb < MIN_VOLTAGE_SEVERE) {
         undervolt_faults++;
     }
-    if (global_mc_data.pVc < MIN_VOLTAGE_SEVERE)
-    {
+    if (global_mc_data.pVc < MIN_VOLTAGE_SEVERE) {
         undervolt_faults++;
     }
 
-    if (global_mc_data.pVa > MAX_VOLTAGE_SEVERE)
-    {
+    if (global_mc_data.pVa > MAX_VOLTAGE_SEVERE) {
         overvolt_faults++;
     }
-    if (global_mc_data.pVb > MAX_VOLTAGE_SEVERE)
-    {
+    if (global_mc_data.pVb > MAX_VOLTAGE_SEVERE) {
         overvolt_faults++;
     }
-    if (global_mc_data.pVc > MAX_VOLTAGE_SEVERE)
-    {
+    if (global_mc_data.pVc > MAX_VOLTAGE_SEVERE) {
         overvolt_faults++;
     }
 
@@ -181,7 +178,9 @@ State_t StateMachineThread::SevereFaultChecking(void)
         // error code
         return SevereDangerFault;
     }
-    // what does cap temp mean for dc_cap_temp
+    if (global_mc_data.dc_cap_temp > MAX_DCCAP_TEMP_SEVERE) {
+        return SevereDangerFault;
+    }
     return NoFault;
 }
 
@@ -228,8 +227,6 @@ State_t StateMachineThread::AutoPilotEvent(void)
         CANFrame_set_field(&tx_frame, STATE_ID_ACK_NACK, idle_state_id);
         if (CANBus_put_frame(&tx_frame) != HAL_OK) { Error_Handler(); }
     }
-
-   
 
     // TODO: Make list of the threads that need to be turned on or turned off
 
@@ -289,9 +286,12 @@ State_t StateMachineThread::InitializeFaultEvent(void)
     SetLedColour(50.0, 0.0, 0.0);
 
     // TODO: Maintain Current State and NewState only send ACK when NewState != Current
-    CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_SEVERITY_CODE.id);
-    CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_SEVERITY_CODE, 0x01); // dummy
-    CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_ERROR_CODE, mc_error_code);
+    if (CurrentState != NewState) {
+        CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_SEVERITY_CODE.id);
+        CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_SEVERITY_CODE, 0x01); // dummy
+        CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_ERROR_CODE, mc_error_code);
+    }
+
     // Receive CAN frame
     if (!Queue_empty(&RX_QUEUE)) {
         CANFrame rx_frame = CANBus_get_frame();
@@ -335,8 +335,12 @@ State_t StateMachineThread::NormalDangerFaultEvent(void)
 
 State_t StateMachineThread::SevereDangerFaultEvent(void)
 {
-    // Todo: FLASH LED colour to red
-    SetLedColour(50.00, 0.0, 0.0);
+    bool flash = true;
+    while(1) {
+        flash ? SetLedColour(50.00, 0.0,0.0) : SetLedColour(0.0,0.0,0.0);
+        flash = !flash;
+        osDelay(200);
+    }
 
     // TODO: Make list of the threads that need to be turned on or turned off
 

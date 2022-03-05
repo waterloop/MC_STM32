@@ -40,6 +40,11 @@
 #define MIN_OVERVOLT_FAULTS 5
 #define MIN_UNDERVOLT_FAULTS 5
 #define MIN_TEMP_FAULTS 5
+
+// DC_CAPTEMP
+#define MAX_DCCAP_TEMP_NORMAL 5
+#define MAX_DCCAP_TEMP_SEVERE 6
+
 using namespace std;
 
 typedef enum
