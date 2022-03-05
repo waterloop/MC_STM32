@@ -98,7 +98,11 @@ void MeasurementsThread::runMeasurements(void* args) {
     startADCandDMA();
 
     while (1) {
-        // TODO: need to figure out what needs to be done here, is the function needed?
+        // Process the acceleration data here...
+
+        osThreadFlagsWait(0x00000001U, osFlagsWaitAll, 0U);
+        processData();
+        startADCandDMA();
     }
 }
 
