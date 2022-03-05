@@ -18,6 +18,8 @@ uint8_t __io_getchar() {
     return ch;
 }
 
+MC g_mc_data;
+
 int mc_entry() {
     printf("initializing drivers...\r\n");
     drv8323 = Drv8323_init();
