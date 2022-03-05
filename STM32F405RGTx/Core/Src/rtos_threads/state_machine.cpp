@@ -14,6 +14,10 @@ State_t StateMachineThread::CurrentState;
 State_t StateMachineThread::OldState;
 StateMachine *StateMachineThread::SM;
 
+uint8_t idle_state_id;
+uint8_t run_state_id;
+uint8_t mc_error_code;
+
 void StateMachineThread::setState(State_t target_state) {
     CurrentState = target_state;
 }
@@ -28,15 +32,16 @@ void StateMachineThread::SetLedColour(float R, float G, float B)
 void StateMachineThread::SendCANHeartbeat(void)
 {
     float avg_MC_current = (global_mc_data.pIa + global_mc_data.pIb + global_mc_data.pIc) / 3;
+    float avg_MC_voltage = (global_mc_data.pVa + global_mc_data.pVb + global_mc_data.pVc) / 3;
 
-    CANFrame tx_frame0 =  CANFrame_init(POD_SPEED.id);
-    CANFrame_set_field(&tx_frame0, POD_SPEED, FLOAT_TO_UINT(global_mc_data.curr_speed));
+    CANFrame tx_frame0 = CANFrame_init(MC_POD_SPEED.id);
+    CANFrame_set_field(&tx_frame0, MC_POD_SPEED, FLOAT_TO_UINT(global_mc_data.curr_speed));
     // What value to use for motor_current
-    CANFrame_set_field(&tx_frame0, MOTOR_CURRENT, FLOAT_TO_UINT(global_mc_data.curr_speed));
+    CANFrame_set_field(&tx_frame0, MOTOR_CURRENT, FLOAT_TO_UINT(avg_MC_current));
 
     CANFrame tx_frame1 = CANFrame_init(BATTERY_CURRENT.id);
-    CANFrame_set_field(&tx_frame1, BATTERY_CURRENT, FLOAT_TO_UINT(global_mc_data.battery.current));
-    CANFrame_set_field(&tx_frame1, BATTERY_PACK_VOLTAGE, FLOAT_TO_UINT(global_mc_data.battery.voltage));
+    CANFrame_set_field(&tx_frame1, BATTERY_CURRENT, FLOAT_TO_UINT(avg_MC_current));
+    CANFrame_set_field(&tx_frame1, BATTERY_VOLTAGE, FLOAT_TO_UINT(avg_MC_current));
 
     if (CANBus_put_frame(&tx_frame0) != HAL_OK) { Error_Handler(); }
     if (CANBus_put_frame(&tx_frame1) != HAL_OK) { Error_Handler(); }
@@ -216,8 +221,7 @@ State_t StateMachineThread::IdleEvent(void)
 
     // TODO: Make list of the threads that need to be turned on or turned off
 
-    if (!Queue_empty(&RX_QUEUE))
-    {
+    if (!Queue_empty(&RX_QUEUE)) {
         CANFrame rx_frame = CANBus_get_frame();
         uint8_t state_id = CANFrame_get_field(&rx_frame, STATE_ID);
         idle_state_id = state_id;
@@ -225,13 +229,15 @@ State_t StateMachineThread::IdleEvent(void)
         {
             return AutoPilot;
         }
-        else if (state_id == MANUAL_OPERATION_WAITING) // TODO: return ManualControl
+        else if (state_id == MANUAL_OPERATION_WAITING) {
+            return ManualControl;
+        } // TODO: return ManualControl
     }
 
     return Idle;
 }
 
-State_t StateMachineThread::AutoPilotEvent()
+State_t StateMachineThread::AutoPilotEvent(void)
 {
     // Set LED colour to yellow
     SetLedColour(50.0, 50.0, 0.0);
@@ -239,8 +245,10 @@ State_t StateMachineThread::AutoPilotEvent()
     // Send ACK on CAN when stop complete 
     // TODO: Maintain Current State and NewState only send ACK when NewState != Current
     CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_STATE_CHANGE_ACK_NACK);
-    CANFrame_set_field(&tx_frame, STATE_CHANGE_ACK_ID, run_state_id);
-    CANFrame_set_field(&tx_frame, STATE_CHANGE_ACK, 0x00);
+    CANFrame_set_field(&tx_frame, STATE_ID_ACK_NACK, idle_state_id);
+    //CANFrame_set_field(&tx_frame, STATE_ID_ACK_NACK, run_state_id);
+
+
     if (CANBus_put_frame(&tx_frame) != HAL_OK)
     {
         Error_Handler();
@@ -274,8 +282,8 @@ State_t StateMachineThread::ManualControlEvent(void)
     // Send ACK on CAN when stop complete
     // TODO: Maintain Current State and NewState only send ACK when NewState != Current
     CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_STATE_CHANGE_ACK_NACK);
-    CANFrame_set_field(&tx_frame, STATE_CHANGE_ACK_ID, run_state_id);
-    CANFrame_set_field(&tx_frame, STATE_CHANGE_ACK, 0x00);
+    CANFrame_set_field(&tx_frame, STATE_ID_ACK_NACK, idle_state_id);
+    // CANFrame_set_field(&tx_frame, STATE_CHANGE_ACK, 0x00);
     if (CANBus_put_frame(&tx_frame) != HAL_OK)
     {
         Error_Handler();
@@ -290,6 +298,7 @@ State_t StateMachineThread::ManualControlEvent(void)
     {
         CANFrame rx_frame = CANBus_get_frame();
         uint8_t state_id = CANFrame_get_field(&rx_frame, STATE_ID);
+        run_state_id = state_id;
         if (state_id == EMERGENCY_BRAKE || state_id == SYSTEM_FAILURE)
         {
             return SevereDangerFault;
@@ -308,9 +317,9 @@ State_t StateMachineThread::InitializeFaultEvent(void)
     SetLedColour(50.0, 0.0, 0.0);
 
     // TODO: Maintain Current State and NewState only send ACK when NewState != Current
-    CANFrame tx_frame = CANFrame_init(MC_SEVERITY_CODE.id);
-    CANFrame_set_field(&tx_frame, MC_SEVERITY_CODE, INITIAL_FAULT); // dummy
-    CANFrame_set_field(&tx_frame, ERROR_CODE, mc_error_code);
+    CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_SEVERITY_CODE.id);
+    CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_SEVERITY_CODE, 0x01); // dummy
+    CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_ERROR_CODE, mc_error_code);
     // Receive CAN frame
     if (!Queue_empty(&RX_QUEUE))
     {
@@ -332,12 +341,11 @@ State_t StateMachineThread::NormalDangerFaultEvent(void)
 {
     // Set LED colour to red
     SetLedColour(50.00, 0.0, 0.0);
-    // TODO: Maintain Current State and NewState only send ACK when NewState != Current
 
     // Report fault on CAN
-    CANFrame tx_frame = CANFrame_init(MC_SEVERITY_CODE.id);
-    CANFrame_set_field(&tx_frame, MC_SEVERITY_CODE, DANGER);
-    CANFrame_set_field(&tx_frame, ERROR_CODE, mc_error_code);
+    CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_SEVERITY_CODE.id);
+    CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_SEVERITY_CODE, 0x01);
+    CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_ERROR_CODE, mc_error_code);
     if (CANBus_put_frame(&tx_frame) != HAL_OK)
     {
         Error_Handler();
@@ -368,9 +376,9 @@ State_t StateMachineThread::SevereDangerFaultEvent(void)
     // TODO: Make list of the threads that need to be turned on or turned off
 
     // Report fault on CAN
-    CANFrame tx_frame = CANFrame_init(MC_SEVERITY_CODE.id);
-    CANFrame_set_field(&tx_frame, SEVERITY_CODE, DANGER);
-    CANFrame_set_field(&tx_frame, ERROR_CODE, mc_error_code);
+    CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_SEVERITY_CODE.id);
+    CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_SEVERITY_CODE, 0x00);
+    CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_ERROR_CODE, mc_error_code);
     if (CANBus_put_frame(&tx_frame) != HAL_OK)
     {
         Error_Handler();
@@ -393,6 +401,27 @@ State_t StateMachineThread::SevereDangerFaultEvent(void)
     return NormalDangerFault;
 }
 
+void StateMachineThread::initialize()
+{
+    thread = RTOSThread(
+        "state_machine_thread",
+        1024 * 3,
+        osPriorityNormal,
+        runStateMachine);
+
+    StateMachine stateMachine[9] = {
+        {Initialize, InitializeEvent},
+        {InitializeFault, InitializeFaultEvent},
+        {Idle, IdleEvent},
+        {AutoPilot, AutoPilotEvent},
+        {ManualControl, ManualControlEvent},
+        {NormalDangerFault, NormalDangerFaultEvent},
+        {SevereDangerFault, SevereDangerFaultEvent},
+        {NoFault, NoFaultEvent},
+    };
+    SM = stateMachine;
+}
+
 void StateMachineThread::runStateMachine(void *args) {
     while (1) {
         OldState = CurrentState;
@@ -401,3 +430,4 @@ void StateMachineThread::runStateMachine(void *args) {
         osDelay(200);
     }
 }
+

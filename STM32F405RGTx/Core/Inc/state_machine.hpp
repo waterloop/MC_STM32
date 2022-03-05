@@ -3,6 +3,12 @@
  *    Created on: Jul. 11, 2021
  *            Author: Kanishk Kashyap
  */
+#pragma once
+
+#include "can.h"
+#include "cmsis_os.h"
+#include "can.h"
+#include "util.hpp"
 
 #ifndef _STATE_MACHINE_H_
 #define _STATE_MACHINE_H_
@@ -45,13 +51,9 @@ typedef enum
     AutoPilot,
     ManualControl,
     EmergencyBrake,
-    Run,
-    Stop,
-    Sleep,
     NormalDangerFault,
     SevereDangerFault,
     NoFault,
-    Reset
 } State_t;
 
 typedef State_t (*pfEvent)(void);
@@ -87,8 +89,9 @@ class StateMachineThread{
         static State_t MinorDangerFaultEvent(void);
         static State_t AutoPilotEvent(void);
         static State_t SevereDangerFaultEvent(void);
+        static State_t NormalDangerFaultEvent(void);
         static State_t ManualControlEvent(void);
-        static State_t AutoPilotEvent(void);
+        static State_t NoFaultEvent(void);
 };
 
 #endif
