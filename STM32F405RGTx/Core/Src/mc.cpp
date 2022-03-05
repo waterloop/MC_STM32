@@ -28,6 +28,7 @@ int mc_entry() {
     printf("initializing rtos threads...\r\n");
     
     MeasurementsThread::initialize();
+    // SVPWM::initialize(); (needs VHZ profile etc)
 
     printf("starting rtos scheduler...\r\n");
     osKernelStart();
