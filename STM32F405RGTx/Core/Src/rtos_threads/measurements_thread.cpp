@@ -8,8 +8,9 @@
 #include "lut.hpp"
 
 #define CURRENT_SENSE_RESISTANCE                1E-3
+#define CURRENT_SENSE_AMPLIFIER_GAIN            20
 #define ADC_TO_VOLTAGE(adc)                     ( (adc) * (3.3/(1 << 12)) )
-#define VOLTAGE_TO_CURRENT(voltage)             ((voltage) / CURRENT_SENSE_RESISTANCE)
+#define VOLTAGE_TO_CURRENT(voltage)             ((voltage) / (CURRENT_SENSE_RESISTANCE * CURRENT_SENSE_AMPLIFIER_GAIN))
 #define VOLTAGE_DIVIDER_CONVERSION(voltage)     ( (voltage) * (91000 + 5600)/5600 )
 
 RTOSThread MeasurementsThread::thread;
@@ -76,11 +77,6 @@ void MeasurementsThread::processData() {
                g_mc_data.fet_temps[2] = ADC_TO_TEMP_LUT[val];
 
         }
-
-        // update with functions once acceleration code is written
-        // g_mc_data.curr_accel =
-        // g_mc_data.curr_speed =
-        // g_mc_data.curr_pos =
     }
 }
 
