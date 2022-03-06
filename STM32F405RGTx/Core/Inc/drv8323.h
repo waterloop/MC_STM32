@@ -123,11 +123,8 @@ typedef struct {
     uint16_t CSA_CONTROL;
 } Drv8323;
 
-Drv8323_Status _Drv8323_TransmitRecieve(
-    SPI_HandleTypeDef *hspi, uint8_t *pTxData, uint8_t *pRxData, uint16_t Size, uint32_t Timeout);
-
-Drv8323_Status _Drv8323_Transmit(
-    SPI_HandleTypeDef *hspi, uint8_t *pData, uint16_t Size, uint32_t Timeout);
+Drv8323_Status _Drv8323_TransmitRecieve(uint16_t* tx, uint16_t* rx);
+Drv8323_Status _Drv8323_Transmit(uint16_t* tx);
 
 /* initializes the driver */
 Drv8323 Drv8323_init();
