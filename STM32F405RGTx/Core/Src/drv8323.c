@@ -11,6 +11,9 @@ Drv8323_Status _Drv8323_TransmitRecieve(uint16_t* tx, uint16_t* rx) {
     HAL_StatusTypeDef status = HAL_SPI_TransmitReceive(&hspi1, tx_buff, rx_buff, 2, HAL_MAX_DELAY);
     Drv8323_cs_high();
 
+    *rx = (rx_buff[0] << 8) | rx_buff[0];
+    *rx &= 0x7FF;
+
     if (status != HAL_OK) { return DRV8323_SPI_ERR; }
     else { return DRV8323_OK; }
 }
