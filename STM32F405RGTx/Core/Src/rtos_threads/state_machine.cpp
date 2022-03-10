@@ -6,7 +6,7 @@
 #include "main.h"
 #include "mc.hpp"
 #include "can.h"
-#include "time_utils.h"
+#include "timer_utils.h"
 
 RTOSThread StateMachineThread::thread;
 
@@ -224,7 +224,7 @@ State_t StateMachineThread::AutoPilotEvent(void)
     // Send ACK on CAN when stop complete 
     if (NewState != CurrentState) {
         CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_STATE_CHANGE_ACK_NACK);
-        CANFrame_set_field(&tx_frame, STATE_ID_ACK_NACK, idle_state_id);
+        CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_STATE_ID_ACK_NACK, idle_state_id);
         if (CANBus_put_frame(&tx_frame) != HAL_OK) { Error_Handler(); }
     }
 
@@ -254,7 +254,7 @@ State_t StateMachineThread::ManualControlEvent(void)
     // TODO: Maintain Current State and NewState only send ACK when NewState != Current
     if (NewState != CurrentState) {
         CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_STATE_CHANGE_ACK_NACK);
-        CANFrame_set_field(&tx_frame, STATE_ID_ACK_NACK, idle_state_id);
+        CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_STATE_ID_ACK_NACK, idle_state_id);
         if (CANBus_put_frame(&tx_frame) != HAL_OK) { Error_Handler(); }
     }
 
@@ -366,6 +366,10 @@ State_t StateMachineThread::SevereDangerFaultEvent(void)
     return NormalDangerFault;
 }
 
+State_t StateMachineThread::NoFaultEvent()
+{
+    return NoFault;
+}
 void StateMachineThread::initialize()
 {
     thread = RTOSThread(
