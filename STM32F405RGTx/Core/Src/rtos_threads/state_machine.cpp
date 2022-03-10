@@ -199,6 +199,9 @@ State_t StateMachineThread::IdleEvent(void) {
     }
 
     // TODO: Make list of the threads that need to be turned on or turned off
+        // On: Measurements Thread, CANZThread
+        // Off: PIDThread, VHzThread, SVPWMThread
+    MeasurementsThread::resumeMeasurements();
 
     if (!Queue_empty(&RX_QUEUE)) {
         CANFrame rx_frame = CANBus_get_frame();
@@ -228,6 +231,9 @@ State_t StateMachineThread::AutoPilotEvent(void)
     }
 
     // TODO: Make list of the threads that need to be turned on or turned off
+        // On: Measurements Thread, CANThread
+        // Off: PIDThread, VHzThread, SVPWMThread
+    MeasurementsThread::resumeMeasurements();
 
     // Receive CAN frame
     if (!Queue_empty(&RX_QUEUE)) {
@@ -256,8 +262,10 @@ State_t StateMachineThread::ManualControlEvent(void)
         if (CANBus_put_frame(&tx_frame) != HAL_OK) { Error_Handler(); }
     }
 
-    // Receive CAN frame
-    // TODO: Make list of the threads that need to be turned on or turned off
+    // List of the threads that need to be turned on or turned off
+        // On: Measurements Thread, CANZThread, PIDThread, VHzThread, SVPWMThread,  StateMachineThread
+
+    MeasurementsThread::resumeMeasurements();
 
     if (!Queue_empty(&RX_QUEUE))
     {
@@ -267,8 +275,7 @@ State_t StateMachineThread::ManualControlEvent(void)
         if (state_id == EMERGENCY_BRAKE || state_id == SYSTEM_FAILURE)
         {
             return SevereDangerFault;
-            // TODO: Talk to Ryan/Dev when to enter MinorDangerFault
-        }
+    }
         else if (state_id == BRAKING)
         {
             return Idle;
@@ -338,6 +345,9 @@ State_t StateMachineThread::SevereDangerFaultEvent(void)
     }
 
     // TODO: Make list of the threads that need to be turned on or turned off
+        // On: Measurements Thread, CANThread
+        // Off: PIDThread, VHzThread, SVPWMThread
+    MeasurementsThread::resumeMeasurements();
 
     // Report fault on CAN
     CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_SEVERITY_CODE.id);
