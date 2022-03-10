@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 #include "state_machine.hpp"
 #include "threads.hpp"
@@ -17,6 +18,7 @@ StateMachine *StateMachineThread::SM;
 uint8_t idle_state_id;
 uint8_t run_state_id;
 uint8_t mc_error_code;
+uint32_t dummy_code = 0x01;
 
 void StateMachineThread::setState(State_t target_state) {
     NewState = target_state;
@@ -207,7 +209,7 @@ State_t StateMachineThread::IdleEvent(void) {
         CANFrame rx_frame = CANBus_get_frame();
         uint8_t state_id = CANFrame_get_field(&rx_frame, STATE_ID);
         idle_state_id = state_id;
-        if (state_id == AUTO_PILOT) { // how do i get length of track
+        if (state_id == AUTO_PILOT) {
             return AutoPilot;
         }
         else if (state_id == MANUAL_OPERATION_WAITING) {
@@ -239,13 +241,14 @@ State_t StateMachineThread::AutoPilotEvent(void)
     if (!Queue_empty(&RX_QUEUE)) {
         CANFrame rx_frame = CANBus_get_frame();
         uint8_t state_id = CANFrame_get_field(&rx_frame, STATE_ID);
+        int distance_to_end = TRACK_LENGTH - global_mc_data.curr_pos;
         if (state_id == EMERGENCY_BRAKE || state_id == SYSTEM_FAILURE) {
             return SevereDangerFault;
             // TODO: Talk to Ryan/Dev when to enter MinorDangerFault
         }
-        else if (state_id == BRAKING) { // TODO: Determine distance travelled
+        else if (state_id == BRAKING || distance_to_end <= DISTANCE_THRESHOLD) {
             return Idle;
-        }
+        } 
     }
     return AutoPilot;
 }
@@ -300,9 +303,6 @@ State_t StateMachineThread::InitializeFaultEvent(void)
         uint8_t state_id = CANFrame_get_field(&rx_frame, STATE_ID);
         if (state_id == RESTING) {
             return Idle;
-        }
-        else {
-            return InitializeFault;
         }
     }
     return InitializeFault;
@@ -396,10 +396,44 @@ void StateMachineThread::initialize()
     SM = stateMachine;
 }
 
-void StateMachineThread::runStateMachine(void *args) {
-    while (1) {
+void StateMachineThread::runStateMachine(void *argument)
+{
+    while (1)
+    {
         CurrentState = NewState;
-        NewState = (*StateMachineThread::SM[CurrentState].Event)();
+        switch (NewState)
+        {
+        case Initialize:
+            NewState = InitializeEvent();
+            break;
+
+        case InitializeFault:
+            NewState = InitializeFaultEvent();
+            break;
+
+        case Idle:
+            NewState = IdleEvent();
+            break;
+
+        case AutoPilot:
+            NewState = AutoPilotEvent();
+            break;
+
+        case ManualControl:
+            NewState = ManualControlEvent();
+            break;
+
+        case NormalDangerFault:
+            NewState = NormalDangerFaultEvent();
+            break;
+
+        case SevereDangerFault:
+            NewState = SevereDangerFaultEvent();
+            break;
+
+        default:
+            Error_Handler();
+        }
         SendCANHeartbeat();
         osDelay(200);
     }

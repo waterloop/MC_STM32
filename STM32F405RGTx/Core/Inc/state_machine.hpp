@@ -13,7 +13,7 @@
 #ifndef _STATE_MACHINE_H_
 #define _STATE_MACHINE_H_
 
-// Constants
+// Constants - These numbers are arbritrary should be changed after testing
 // Mosfet Array Length
 #define NUM_MOSFETS 6
 #define NUM_PHASE_OUTPUTS 3
@@ -45,6 +45,10 @@
 #define MAX_DCCAP_TEMP_NORMAL 5
 #define MAX_DCCAP_TEMP_SEVERE 6
 
+// TRACK_INFORMATION
+#define TRACK_LENGTH 100
+#define DISTANCE_THRESHOLD 6
+
 using namespace std;
 
 typedef enum
@@ -62,8 +66,6 @@ typedef enum
 } State_t;
 
 typedef State_t (*pfEvent)(void);
-
-// TODO: Use measurements_thread.hpp to fix this
 
 typedef struct {
     State_t State;
