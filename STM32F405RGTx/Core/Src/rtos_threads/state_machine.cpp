@@ -107,7 +107,6 @@ State_t StateMachineThread::NormalFaultChecking(void)
         return NormalDangerFault;
     }
 
-    // TODO: check for normal_temp and severe_temp for dc_cap_temp
     if (global_mc_data.dc_cap_temp > MAX_DCCAP_TEMP_NORMAL) {
         // TODO: error code
         return NormalDangerFault;
@@ -251,7 +250,6 @@ State_t StateMachineThread::ManualControlEvent(void)
     SetLedColour(0, 0, 50.0);
 
     // Send ACK on CAN when stop complete
-    // TODO: Maintain Current State and NewState only send ACK when NewState != Current
     if (NewState != CurrentState) {
         CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_STATE_CHANGE_ACK_NACK);
         CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_STATE_ID_ACK_NACK, idle_state_id);
@@ -259,8 +257,6 @@ State_t StateMachineThread::ManualControlEvent(void)
     }
 
     // Receive CAN frame
-    // TODO: Check if queue contains state_change instead of checking entire queue
-
     // TODO: Make list of the threads that need to be turned on or turned off
 
     if (!Queue_empty(&RX_QUEUE))
@@ -285,7 +281,6 @@ State_t StateMachineThread::InitializeFaultEvent(void)
 {
     SetLedColour(50.0, 0.0, 0.0);
 
-    // TODO: Maintain Current State and NewState only send ACK when NewState != Current
     if (CurrentState != NewState) {
         CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_SEVERITY_CODE.id);
         CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_SEVERITY_CODE, 0x01); // dummy
@@ -366,10 +361,10 @@ State_t StateMachineThread::SevereDangerFaultEvent(void)
     return NormalDangerFault;
 }
 
-State_t StateMachineThread::NoFaultEvent()
-{
+State_t StateMachineThread::NoFaultEvent() {
     return NoFault;
 }
+
 void StateMachineThread::initialize()
 {
     thread = RTOSThread(
@@ -399,4 +394,3 @@ void StateMachineThread::runStateMachine(void *args) {
         osDelay(200);
     }
 }
-
