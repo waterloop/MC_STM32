@@ -36,20 +36,25 @@ Drv8323 Drv8323_init() {
     Drv8323_cs_high();
     Drv8323_enable();
 
-    Drv8323_read_all(&ret);
+    return ret;
+}
+
+Drv8323_Status Drv8323_setup(Drv8323 *self) {
+    Drv8323_Status status = DRV8323_OK;
+
+    status |= Drv8323_read_all(self);
 
     // set the gate source and sink currents to the lowest setting...
-    ret.GATE_DRIVE_HS &= ~(0b1111U << GATE_DRIVE_HS_IDRIVEP_HS);
-    ret.GATE_DRIVE_HS &= ~(0b1111U << GATE_DRIVE_HS_IDRIVEN_HS);
-    ret.GATE_DRIVE_LS &= ~(0b1111U << GATE_DRIVE_HS_IDRIVEP_HS);
-    ret.GATE_DRIVE_LS &= ~(0b1111U << GATE_DRIVE_HS_IDRIVEN_HS);
+    self->GATE_DRIVE_HS &= ~(0b1111U << GATE_DRIVE_HS_IDRIVEP_HS);
+    self->GATE_DRIVE_HS &= ~(0b1111U << GATE_DRIVE_HS_IDRIVEN_HS);
+    self->GATE_DRIVE_LS &= ~(0b1111U << GATE_DRIVE_HS_IDRIVEP_HS);
+    self->GATE_DRIVE_LS &= ~(0b1111U << GATE_DRIVE_HS_IDRIVEN_HS);
 
     // set deadtime to max...
-    ret.OCP_CONTROL |= (0b11U << OCP_CONTROL_DEAD_TIME);
+    self->OCP_CONTROL |= (0b11U << OCP_CONTROL_DEAD_TIME);
 
-    Drv8323_commit(&ret);
-
-    return ret;
+    status |= Drv8323_commit(self);
+    return status;
 }
 
 Drv8323_Status Drv8323_fault_status(Drv8323* self, uint8_t* has_fault) {

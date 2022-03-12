@@ -128,6 +128,7 @@ Drv8323_Status _Drv8323_Transmit(uint16_t* tx);
 
 /* initializes the driver */
 Drv8323 Drv8323_init();
+Drv8323_Status Drv8323_setup(Drv8323* self);
 
 /*
     Passes the result by reference, if there is a fault, "has_fault"
