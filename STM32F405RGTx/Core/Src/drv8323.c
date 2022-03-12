@@ -31,7 +31,7 @@ Drv8323_Status _Drv8323_Transmit(uint16_t* tx) {
 }
 
 Drv8323 Drv8323_init() {
-    Drv8323 ret = {};
+    Drv8323 ret = {0};
 
     Drv8323_cs_high();
     Drv8323_enable();
