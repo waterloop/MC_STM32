@@ -191,7 +191,7 @@ State_t StateMachineThread::InitializeEvent(void) {
 
 State_t StateMachineThread::IdleEvent(void) {
     SetLedColour(0.0, 50.0, 0.0);
-    State_t normal_fault_check = NormalFaultChecking();
+/*     State_t normal_fault_check = NormalFaultChecking();
     State_t severe_fault_check = SevereFaultChecking();
     if (severe_fault_check == SevereDangerFault) {
         return severe_fault_check;
@@ -199,7 +199,7 @@ State_t StateMachineThread::IdleEvent(void) {
     else if (normal_fault_check == NormalDangerFault) {
         return normal_fault_check;
     }
-
+ */
     // TODO: Make list of the threads that need to be turned on or turned off
         // On: Measurements Thread, CANZThread
         // Off: PIDThread, VHzThread, SVPWMThread
@@ -257,12 +257,16 @@ State_t StateMachineThread::ManualControlEvent(void)
 {
     // Set LED colour to blue
     SetLedColour(0, 0, 50.0);
-
+    uint32_t targetSpeed = 10;
     // Send ACK on CAN when stop complete
     if (NewState != CurrentState) {
         CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_STATE_CHANGE_ACK_NACK);
         CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_STATE_ID_ACK_NACK, idle_state_id);
         if (CANBus_put_frame(&tx_frame) != HAL_OK) { Error_Handler(); }
+
+        CANFrame tx_frame1 = CANFrame_init(MANUAL_CONTROL_1);
+        CANFrame_set_field(&tx_frame1, TARGET_SPEED, targetSpeed);
+        // Not sure what to put for target frequency
     }
 
     // List of the threads that need to be turned on or turned off

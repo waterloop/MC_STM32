@@ -10,8 +10,6 @@
 #include "can.h"
 #include "util.hpp"
 
-#ifndef _STATE_MACHINE_H_
-#define _STATE_MACHINE_H_
 
 // Constants - These numbers are arbritrary should be changed after testing
 // Mosfet Array Length
@@ -100,5 +98,3 @@ class StateMachineThread{
         static State_t ManualControlEvent(void);
         static State_t NoFaultEvent(void);
 };
-
-#endif
