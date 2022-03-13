@@ -19,8 +19,8 @@ Drv8323_Status _Drv8323_TransmitRecieve(uint16_t* tx, uint16_t* rx) {
 }
 Drv8323_Status _Drv8323_Transmit(uint16_t* tx) {
     uint8_t tx_buff[2];
-    tx_buff[0] = (*tx_buff >> 8) & 0xff;
-    tx_buff[1] = *tx_buff & 0xff;
+    tx_buff[0] = (*tx >> 8) & 0xff;
+    tx_buff[1] = *tx & 0xff;
 
     Drv8323_cs_low();
     HAL_StatusTypeDef status = HAL_SPI_Transmit(&hspi1, tx_buff, 2, HAL_MAX_DELAY);
@@ -36,20 +36,26 @@ Drv8323 Drv8323_init() {
     Drv8323_cs_high();
     Drv8323_enable();
 
-    Drv8323_read_all(&ret);
+    return ret;
+}
+
+Drv8323_Status Drv8323_setup(Drv8323 *self) {
+    Drv8323_Status status = DRV8323_OK;
+
+    status |= Drv8323_read_all(self);
 
     // set the gate source and sink currents to the lowest setting...
-    ret.GATE_DRIVE_HS &= ~(0b1111U << GATE_DRIVE_HS_IDRIVEP_HS);
-    ret.GATE_DRIVE_HS &= ~(0b1111U << GATE_DRIVE_HS_IDRIVEN_HS);
-    ret.GATE_DRIVE_LS &= ~(0b1111U << GATE_DRIVE_HS_IDRIVEP_HS);
-    ret.GATE_DRIVE_LS &= ~(0b1111U << GATE_DRIVE_HS_IDRIVEN_HS);
+    self->GATE_DRIVE_HS &= ~(0b1111U << GATE_DRIVE_HS_IDRIVEP_HS);
+    self->GATE_DRIVE_HS &= ~(0b1111U << GATE_DRIVE_HS_IDRIVEN_HS);
+    self->GATE_DRIVE_LS &= ~(0b1111U << GATE_DRIVE_LS_IDRIVEP_LS);
+    self->GATE_DRIVE_LS &= ~(0b1111U << GATE_DRIVE_LS_IDRIVEN_LS);
 
     // set deadtime to max...
-    ret.OCP_CONTROL |= (0b11U << OCP_CONTROL_DEAD_TIME);
+    self->OCP_CONTROL |= (0b11U << OCP_CONTROL_DEAD_TIME);
 
-    Drv8323_commit(&ret);
+    status |= Drv8323_commit(self);
 
-    return ret;
+    return status;
 }
 
 Drv8323_Status Drv8323_fault_status(Drv8323* self, uint8_t* has_fault) {
@@ -82,6 +88,24 @@ Drv8323_Status Drv8323_commit(Drv8323* self) {
         tx = (i << 11) | (*reg_table[i] & 0x7FF);
         status |= _Drv8323_Transmit(&tx);
     }
+
+    // read back to verify the write was successful...
+    Drv8323 old;
+    old.FAULT_STATUS_1 = self->FAULT_STATUS_1;
+    old.FAULT_STATUS_2 = self->FAULT_STATUS_2;
+    old.DRIVER_CONTROL = self->DRIVER_CONTROL;
+    old.GATE_DRIVE_HS  = self->GATE_DRIVE_HS;
+    old.GATE_DRIVE_LS  = self->GATE_DRIVE_LS;
+    old.OCP_CONTROL    = self->OCP_CONTROL;
+    old.CSA_CONTROL    = self->CSA_CONTROL;
+    Drv8323_read_all(self);
+
+    if (
+        (old.DRIVER_CONTROL != self->DRIVER_CONTROL) ||
+        (old.GATE_DRIVE_HS  != self->GATE_DRIVE_HS)  ||
+        (old.OCP_CONTROL    != self->OCP_CONTROL)    ||
+        (old.CSA_CONTROL    != self->CSA_CONTROL)
+    ) { status |= DRV8323_SPI_ERR; }
 
     return status;
 }
