@@ -34,3 +34,7 @@ class MC {
 int mc_entry();
 
 extern MC g_mc_data;
+<<<<<<< HEAD
+=======
+
+>>>>>>> 04bfb9fc38670c61e96b283967aee63f0705ca84

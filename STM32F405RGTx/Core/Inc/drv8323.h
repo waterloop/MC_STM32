@@ -81,10 +81,37 @@ extern "C" {
 #define Drv8323_cs_low()        ( HAL_GPIO_WritePin(CS_DRIVER_GPIO_Port, CS_DRIVER_Pin, (GPIO_PinState)0) )
 
 typedef enum {
-    DRV8323_OK = 0b00U,
-    DRV8323_SPI_ERR = 0b01U,
-    DRV8323_INVALID_ARG_ERR = 0b10U
+    DRV8323_OK = 0b000U,
+    DRV8323_SPI_ERR = 0b001U,
+    DRV8323_INVALID_ARG_ERR = 0b010U,
+    DRV8323_INTERNAL_FAULT = 0b100U
 } Drv8323_Status;
+
+// idk if i'll need this later, so I'll leave it
+// commented out for now...
+// typedef enum {
+//     VDS_LC      = 1U << 0,
+//     VDS_HC      = 1U << 1,
+//     VDS_LB      = 1U << 2,
+//     VDS_HB      = 1U << 3,
+//     VDS_LA      = 1U << 4,
+//     VDS_HA      = 1U << 5,
+//     OTSD        = 1U << 6,
+//     UVLO        = 1U << 7,
+//     GDF         = 1U << 8,
+//     VDS_OCP     = 1U << 9,
+//     VGS_LC      = 1U << 10,
+//     VGS_HC      = 1U << 11,
+//     VGS_LB      = 1U << 12,
+//     VGS_HB      = 1U << 13,
+//     VGS_LA      = 1U << 14,
+//     VGS_HA      = 1U << 15,
+//     CPUV        = 1U << 16,
+//     OTW         = 1U << 17,
+//     SC_OC       = 1U << 18,
+//     SB_OC       = 1U << 19,
+//     SA_OC       = 1U << 20
+// } Drv8323_Fault;
 
 typedef struct {
     uint16_t FAULT_STATUS_1;
@@ -96,16 +123,27 @@ typedef struct {
     uint16_t CSA_CONTROL;
 } Drv8323;
 
-Drv8323_Status _Drv8323_TransmitRecieve(
-    SPI_HandleTypeDef *hspi, uint8_t *pTxData, uint8_t *pRxData, uint16_t Size, uint32_t Timeout);
+Drv8323_Status _Drv8323_TransmitRecieve(uint16_t* tx, uint16_t* rx);
+Drv8323_Status _Drv8323_Transmit(uint16_t* tx);
 
-Drv8323_Status _Drv8323_Transmit(
-    SPI_HandleTypeDef *hspi, uint8_t *pData, uint16_t Size, uint32_t Timeout);
-
+/* initializes the driver */
 Drv8323 Drv8323_init();
+Drv8323_Status Drv8323_setup(Drv8323* self);
 
+/*
+    Passes the result by reference, if there is a fault, "has_fault"
+    will be 1. If there IS a fault, the status of the fault status
+    registers will be read.
+*/ 
+Drv8323_Status Drv8323_fault_status(Drv8323* self, uint8_t* has_fault);
+
+/* reads a specific register */
 Drv8323_Status Drv8323_read_reg(Drv8323* self, uint8_t addr);
+
+/* reads all registers */
 Drv8323_Status Drv8323_read_all(Drv8323* self);
+
+/* writes the values of all the register variables to the device */
 Drv8323_Status Drv8323_commit(Drv8323* self);
 
 #ifdef __cplusplus
