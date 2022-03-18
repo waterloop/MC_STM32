@@ -257,7 +257,6 @@ State_t StateMachineThread::ManualControlEvent(void)
 {
     // Set LED colour to blue
     SetLedColour(0, 0, 50.0);
-    uint32_t targetSpeed = 10;
     // Send ACK on CAN when stop complete
     if (NewState != CurrentState) {
         CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_STATE_CHANGE_ACK_NACK);
@@ -265,7 +264,8 @@ State_t StateMachineThread::ManualControlEvent(void)
         if (CANBus_put_frame(&tx_frame) != HAL_OK) { Error_Handler(); }
 
         CANFrame tx_frame1 = CANFrame_init(MANUAL_CONTROL_1);
-        CANFrame_set_field(&tx_frame1, TARGET_SPEED, targetSpeed);
+        uint8_t target_speed = CANFrame_get_field(&tx_frame1, TARGET_SPEED);
+        CANFrame_set_field(&tx_frame1, TARGET_SPEED, target_speed);
         // Not sure what to put for target frequency
     }
 
@@ -300,7 +300,12 @@ State_t StateMachineThread::InitializeFaultEvent(void)
         CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_SEVERITY_CODE, 0x01); // dummy
         CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_ERROR_CODE, mc_error_code);
     }
-
+    /* After everything is merged
+    Put all the MOSFETs into HIGH-Z mode using the drv8323 drivers
+        . The DRV drivers aren't merged in right now, so just put a comment to remind yourself to put that in once it does get merged
+    (Probably) read the fault codes from the DRV
+    Disable the PID, SVPWM, and VHz threads
+    */
     // Receive CAN frame
     if (!Queue_empty(&RX_QUEUE)) {
         CANFrame rx_frame = CANBus_get_frame();
@@ -316,7 +321,7 @@ State_t StateMachineThread::NormalDangerFaultEvent(void)
 {
     // Set LED colour to red
     SetLedColour(50.00, 0.0, 0.0);
-
+    
     // Report fault on CAN
     CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_SEVERITY_CODE.id);
     CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_SEVERITY_CODE, 0x01);
@@ -324,7 +329,12 @@ State_t StateMachineThread::NormalDangerFaultEvent(void)
     if (CANBus_put_frame(&tx_frame) != HAL_OK) {
         Error_Handler();
     }
-
+    /* After everything is merged
+    Put all the MOSFETs into HIGH-Z mode using the drv8323 drivers
+        . The DRV drivers aren't merged in right now, so just put a comment to remind yourself to put that in once it does get merged
+    (Probably) read the fault codes from the DRV
+    Disable the PID, SVPWM, and VHz threads
+    */
     // Receive CAN frame
     if (!Queue_empty(&RX_QUEUE)) {
         CANFrame rx_frame = CANBus_get_frame();
@@ -352,6 +362,12 @@ State_t StateMachineThread::SevereDangerFaultEvent(void)
         // On: Measurements Thread, CANThread
         // Off: PIDThread, VHzThread, SVPWMThread
     MeasurementsThread::resumeMeasurements();
+    /* After everything is merged
+    Put all the MOSFETs into HIGH-Z mode using the drv8323 drivers
+        . The DRV drivers aren't merged in right now, so just put a comment to remind yourself to put that in once it does get merged
+    (Probably) read the fault codes from the DRV
+    Disable the PID, SVPWM, and VHz threads
+    */
 
     // Report fault on CAN
     CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_SEVERITY_CODE.id);
