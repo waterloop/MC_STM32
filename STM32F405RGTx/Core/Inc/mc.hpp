@@ -28,4 +28,5 @@ class MC {
 
 int mc_entry();
 
-extern MC global_mc_data;
+extern MC g_mc_data;
+

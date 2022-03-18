@@ -21,6 +21,7 @@ uint8_t __io_getchar() {
 int mc_entry() {
     printf("initializing drivers...\r\n");
     drv8323 = Drv8323_init();
+    if (Drv8323_setup(&drv8323) != DRV8323_OK) { Error_Handler(); };
 
     printf("initializing rtos kernel...\r\n");
     osKernelInitialize();
