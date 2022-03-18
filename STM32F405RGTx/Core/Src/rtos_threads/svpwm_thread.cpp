@@ -25,13 +25,11 @@ SVPWM::SVPWM(float SwitchFreq, VHZPROFILE *vhz, TIM_HandleTypeDef *htim){
 }
 
 void SVPWM::initialize(){
-	SVPWM sv(10000, vhz, htim); 
-
    	thread = RTOSThread(
         "svpwm_thread",
         1024,
         osPriorityAboveNormal,
-		update // what is going wrong?
+		update 
     );
 }
 
