@@ -89,6 +89,7 @@ void MeasurementsThread::startADCandDMA() {
     
     if (status != HAL_OK) {
         printf("Error: HAL_ADC_Start_DMA failed with status code %d\r\n", status);
+        Error_Handler();
     }
     
     osKernelUnlock();
