@@ -18,6 +18,7 @@ StateMachine *StateMachineThread::SM;
 uint8_t idle_state_id;
 uint8_t run_state_id;
 uint8_t mc_error_code;
+uint8_t phase_option;
 uint32_t dummy_code = 0x01;
 
 void StateMachineThread::setState(State_t target_state) {
@@ -99,13 +100,28 @@ State_t StateMachineThread::NormalFaultChecking(void)
         return NormalDangerFault;
     }
 
+    if (g_mc_data.pIa > MAX_CURRENT_NORMAL) {
+        mc_error_code = PHASE_OVERCURRENT;
+        phase_option = PHASE_A;
+        return NormalDangerFault;
+    } else if (g_mc_data.pIb > MAX_CURRENT_NORMAL) {
+        mc_error_code = PHASE_OVERCURRENT;
+        phase_option = PHASE_B;
+        return NormalDangerFault;
+    } else if (g_mc_data.pIc > MAX_CURRENT_NORMAL)
+    {
+        mc_error_code = PHASE_OVERCURRENT;
+        phase_option = PHASE_C;
+        return NormalDangerFault;
+    }
+
     // DC fault checking
     if (g_mc_data.dc_voltage > MAX_DCVOLTAGE_NORMAL) {
-        // TODO: error code
+        mc_error_code = DC_CAP_OVERVOLTAGE;
         return NormalDangerFault;
     }
     else if (g_mc_data.dc_voltage < MIN_DCVOLTAGE_NORMAL) {
-        // TODO: error code
+        mc_error_code = DC_CAP_UNDERVOLTAGE;
         return NormalDangerFault;
     }
 
