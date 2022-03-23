@@ -2,7 +2,7 @@
 #include "util.hpp"
 
 // TODO: these values might need to be adjusted as needed
-#define ADC_NUM_CONVERSIONS         6U
+#define ADC_NUM_CONVERSIONS         11U
 #define ADC_DECIMATION_COEFF        256U
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc);

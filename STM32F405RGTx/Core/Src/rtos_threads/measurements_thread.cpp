@@ -28,7 +28,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
 void MeasurementsThread::initialize(){
     thread = RTOSThread(
         "measurements_thread",
-        1024,
+        1024*5,
         osPriorityAboveNormal,
         runMeasurements
     );
@@ -49,32 +49,43 @@ void MeasurementsThread::processData() {
             // read and convert phase voltages and dc voltage
             case 0:
                g_mc_data.pVa = VOLTAGE_DIVIDER_CONVERSION( ADC_TO_VOLTAGE( val ) );
+               break;
             case 1:
                g_mc_data.pVb = VOLTAGE_DIVIDER_CONVERSION( ADC_TO_VOLTAGE( val ) );
+               break;
             case 2:
                g_mc_data.pVc = VOLTAGE_DIVIDER_CONVERSION( ADC_TO_VOLTAGE( val ) );
+               break;
             case 3:
                g_mc_data.dc_voltage = VOLTAGE_DIVIDER_CONVERSION( ADC_TO_VOLTAGE( val ) );
+               break;
 
             // read and convert phase currents
             case 4:
                g_mc_data.pIa = VOLTAGE_TO_CURRENT( ADC_TO_VOLTAGE(val) );
+               break;
             case 5:
                g_mc_data.pIb = VOLTAGE_TO_CURRENT( ADC_TO_VOLTAGE(val) );
+               break;
             case 6:
                g_mc_data.pIc = VOLTAGE_TO_CURRENT( ADC_TO_VOLTAGE(val) );
+               break;
 
             // read and convert adc temperatures
             // NOTE: the ordering might change depending physical arrangement later on
             case 7:
             // Note: dc_cap_temp dne for Powerboard rev 2 but will for the next rev
                g_mc_data.dc_cap_temp =  ADC_TO_TEMP_LUT[val];
+               break;
             case 8:
                g_mc_data.fet_temps[0] = ADC_TO_TEMP_LUT[val];
+               break;
             case 9:
                g_mc_data.fet_temps[1] = ADC_TO_TEMP_LUT[val];
+               break;
             case 10:
                g_mc_data.fet_temps[2] = ADC_TO_TEMP_LUT[val];
+               break;
 
         }
     }
