@@ -57,18 +57,18 @@ State_t StateMachineThread::NormalFaultChecking(void)
     int undervolt_faults = 0;
     int temp_faults = 0;
     // check for temperature faults
-    for (int i = 0; i < NUM_MOSFETS; ++i) {
+    for (int i = NUM_MOSFETS-1; i < NUM_MOSFETS; ++i) {
         float mosfetTemp = g_mc_data.fet_temps[i];
         if (mosfetTemp > MAX_MOSFET_TEMP_NORMAL) {
             ++temp_faults;
         }
         if (temp_faults > MIN_TEMP_FAULTS) {
-            // TODO: add error code
+            mc_error_code = PHASE_TEMPERATURE;
             return NormalDangerFault;
         }
     }
     // check undervolts and overvolts for phase outputs
-    if (g_mc_data.pVa < MIN_VOLTAGE_NORMAL) {
+    if (g_mc_data.pVc < MIN_VOLTAGE_NORMAL) {
         undervolt_faults++;
     }
     if (g_mc_data.pVb < MIN_VOLTAGE_NORMAL) {
@@ -88,18 +88,15 @@ State_t StateMachineThread::NormalFaultChecking(void)
         overvolt_faults++;
     }
     if (overvolt_faults > MIN_OVERVOLT_FAULTS) {
+        mc_error_code = PHASE_OVERVOLTAGE;
         return NormalDangerFault;
     }
     if (undervolt_faults > MIN_UNDERVOLT_FAULTS) {
+        mc_error_code = PHASE_UNDERVOLTAGE;
         return NormalDangerFault;
     }
 
     // Check current for phase outputs
-    if (g_mc_data.pIa > MAX_CURRENT_NORMAL || g_mc_data.pIb > MAX_CURRENT_NORMAL || g_mc_data.pIc > MAX_CURRENT_NORMAL) {
-        //TODO: error code
-        return NormalDangerFault;
-    }
-
     if (g_mc_data.pIa > MAX_CURRENT_NORMAL) {
         mc_error_code = PHASE_OVERCURRENT;
         phase_option = PHASE_A;
@@ -137,6 +134,7 @@ State_t StateMachineThread::SevereFaultChecking(void)
     int overvolt_faults = 0;
     int undervolt_faults = 0;
     int temp_faults = 0;
+    bool first_phase = true;
     // check for temperature faults
     for (int i = 0; i < NUM_MOSFETS; ++i)
     {
@@ -147,7 +145,7 @@ State_t StateMachineThread::SevereFaultChecking(void)
         }
         if (temp_faults > MIN_TEMP_FAULTS)
         {
-            // TODO: add error code
+            mc_error_code = PHASE_TEMPERATURE;
             return SevereDangerFault;
         }
     }
@@ -174,25 +172,40 @@ State_t StateMachineThread::SevereFaultChecking(void)
 
     //  TODO: after checking for faults return state
     if (overvolt_faults > MIN_OVERVOLT_FAULTS) {
+        mc_error_code = PHASE_OVERVOLTAGE;
         return NormalDangerFault;
     }
     if (undervolt_faults > MIN_UNDERVOLT_FAULTS) {
+        mc_error_code = PHASE_UNDERVOLTAGE;
         return NormalDangerFault;
     }
 
-    // Check current for phase outputs
-    if (g_mc_data.pIa > MAX_CURRENT_SEVERE || g_mc_data.pIb > MAX_CURRENT_SEVERE || g_mc_data.pIc > MAX_CURRENT_SEVERE) {
-        // error code
-        return SevereDangerFault;
+    if (g_mc_data.pIa > MAX_CURRENT_SEVERE)
+    {
+        mc_error_code = PHASE_OVERCURRENT;
+        phase_option = PHASE_A;
+        return NormalDangerFault;
+    }
+    else if (g_mc_data.pIb > MAX_CURRENT_SEVERE)
+    {
+        mc_error_code = PHASE_OVERCURRENT;
+        phase_option = PHASE_B;
+        return NormalDangerFault;
+    }
+    else if (g_mc_data.pIc > MAX_CURRENT_SEVERE)
+    {
+        mc_error_code = PHASE_OVERCURRENT;
+        phase_option = PHASE_C;
+        return NormalDangerFault;
     }
 
     // DC fault checking
     if (g_mc_data.dc_voltage > MAX_DCVOLTAGE_SEVERE) {
-        // error code
+        mc_error_code = DC_CAP_OVERVOLTAGE;
         return SevereDangerFault;
     }
     else if (g_mc_data.dc_voltage < MIN_DCVOLTAGE_SEVERE) {
-        // error code
+        mc_error_code = DC_CAP_UNDERVOLTAGE;
         return SevereDangerFault;
     }
     if (g_mc_data.dc_cap_temp > MAX_DCCAP_TEMP_SEVERE) {
@@ -313,7 +326,7 @@ State_t StateMachineThread::InitializeFaultEvent(void)
 
     if (CurrentState != NewState) {
         CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_SEVERITY_CODE.id);
-        CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_SEVERITY_CODE, 0x01); // dummy
+        CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_SEVERITY_CODE, WARNING); // dummy
         CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_ERROR_CODE, mc_error_code);
     }
     /* After everything is merged
@@ -340,7 +353,7 @@ State_t StateMachineThread::NormalDangerFaultEvent(void)
     
     // Report fault on CAN
     CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_SEVERITY_CODE.id);
-    CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_SEVERITY_CODE, 0x01);
+    CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_SEVERITY_CODE, DANGER);
     CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_ERROR_CODE, mc_error_code);
     if (CANBus_put_frame(&tx_frame) != HAL_OK) {
         Error_Handler();
@@ -387,7 +400,7 @@ State_t StateMachineThread::SevereDangerFaultEvent(void)
 
     // Report fault on CAN
     CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_SEVERITY_CODE.id);
-    CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_SEVERITY_CODE, 0x00);
+    CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_SEVERITY_CODE, SEVERE);
     CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_ERROR_CODE, mc_error_code);
     if (CANBus_put_frame(&tx_frame) != HAL_OK) {
         Error_Handler();
