@@ -7,7 +7,7 @@
 #include "can.h"
 #include "state_machine.hpp"
 
-MC global_mc_data;
+MC g_mc_data;
 Drv8323 drv8323;
 
 // redirect stdin and stdout to UART1

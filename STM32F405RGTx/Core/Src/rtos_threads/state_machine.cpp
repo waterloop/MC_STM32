@@ -33,11 +33,11 @@ void StateMachineThread::SetLedColour(float R, float G, float B)
 
 void StateMachineThread::SendCANHeartbeat(void)
 {
-    float avg_MC_current = (global_mc_data.pIa + global_mc_data.pIb + global_mc_data.pIc) / 3;
-    float avg_MC_voltage = (global_mc_data.pVa + global_mc_data.pVb + global_mc_data.pVc) / 3;
+    float avg_MC_current = (g_mc_data.pIa + g_mc_data.pIb + g_mc_data.pIc) / 3;
+    float avg_MC_voltage = (g_mc_data.pVa + g_mc_data.pVb + g_mc_data.pVc) / 3;
 
     CANFrame tx_frame0 = CANFrame_init(MC_POD_SPEED.id);
-    CANFrame_set_field(&tx_frame0, MC_POD_SPEED, FLOAT_TO_UINT(global_mc_data.curr_speed));
+    CANFrame_set_field(&tx_frame0, MC_POD_SPEED, FLOAT_TO_UINT(g_mc_data.curr_speed));
     // What value to use for motor_current
     CANFrame_set_field(&tx_frame0, MOTOR_CURRENT, FLOAT_TO_UINT(avg_MC_current));
 
@@ -57,7 +57,7 @@ State_t StateMachineThread::NormalFaultChecking(void)
     int temp_faults = 0;
     // check for temperature faults
     for (int i = 0; i < NUM_MOSFETS; ++i) {
-        float mosfetTemp = global_mc_data.fet_temps[i];
+        float mosfetTemp = g_mc_data.fet_temps[i];
         if (mosfetTemp > MAX_MOSFET_TEMP_NORMAL) {
             ++temp_faults;
         }
@@ -67,23 +67,23 @@ State_t StateMachineThread::NormalFaultChecking(void)
         }
     }
     // check undervolts and overvolts for phase outputs
-    if (global_mc_data.pVa < MIN_VOLTAGE_NORMAL) {
+    if (g_mc_data.pVa < MIN_VOLTAGE_NORMAL) {
         undervolt_faults++;
     }
-    if (global_mc_data.pVb < MIN_VOLTAGE_NORMAL) {
+    if (g_mc_data.pVb < MIN_VOLTAGE_NORMAL) {
         undervolt_faults++;
     }
-    if (global_mc_data.pVc < MIN_VOLTAGE_NORMAL) {
+    if (g_mc_data.pVc < MIN_VOLTAGE_NORMAL) {
         undervolt_faults++;
     }
 
-    if (global_mc_data.pVa > MAX_VOLTAGE_NORMAL) {
+    if (g_mc_data.pVa > MAX_VOLTAGE_NORMAL) {
         overvolt_faults++;
     }
-    if (global_mc_data.pVb > MAX_VOLTAGE_NORMAL) {
+    if (g_mc_data.pVb > MAX_VOLTAGE_NORMAL) {
         overvolt_faults++;
     }
-    if (global_mc_data.pVc > MAX_VOLTAGE_NORMAL) {
+    if (g_mc_data.pVc > MAX_VOLTAGE_NORMAL) {
         overvolt_faults++;
     }
     if (overvolt_faults > MIN_OVERVOLT_FAULTS) {
@@ -94,22 +94,22 @@ State_t StateMachineThread::NormalFaultChecking(void)
     }
 
     // Check current for phase outputs
-    if (global_mc_data.pIa > MAX_CURRENT_NORMAL || global_mc_data.pIb > MAX_CURRENT_NORMAL || global_mc_data.pIc > MAX_CURRENT_NORMAL) {
+    if (g_mc_data.pIa > MAX_CURRENT_NORMAL || g_mc_data.pIb > MAX_CURRENT_NORMAL || g_mc_data.pIc > MAX_CURRENT_NORMAL) {
         //TODO: error code
         return NormalDangerFault;
     }
 
     // DC fault checking
-    if (global_mc_data.dc_voltage > MAX_DCVOLTAGE_NORMAL) {
+    if (g_mc_data.dc_voltage > MAX_DCVOLTAGE_NORMAL) {
         // TODO: error code
         return NormalDangerFault;
     }
-    else if (global_mc_data.dc_voltage < MIN_DCVOLTAGE_NORMAL) {
+    else if (g_mc_data.dc_voltage < MIN_DCVOLTAGE_NORMAL) {
         // TODO: error code
         return NormalDangerFault;
     }
 
-    if (global_mc_data.dc_cap_temp > MAX_DCCAP_TEMP_NORMAL) {
+    if (g_mc_data.dc_cap_temp > MAX_DCCAP_TEMP_NORMAL) {
         // TODO: error code
         return NormalDangerFault;
     }
@@ -124,7 +124,7 @@ State_t StateMachineThread::SevereFaultChecking(void)
     // check for temperature faults
     for (int i = 0; i < NUM_MOSFETS; ++i)
     {
-        float mosfetTemp = global_mc_data.fet_temps[i];
+        float mosfetTemp = g_mc_data.fet_temps[i];
         if (mosfetTemp > MAX_MOSFET_TEMP_SEVERE)
         {
             ++temp_faults;
@@ -136,23 +136,23 @@ State_t StateMachineThread::SevereFaultChecking(void)
         }
     }
     // check undervolts and overvolts for phase outputs
-    if (global_mc_data.pVa < MIN_VOLTAGE_SEVERE) {
+    if (g_mc_data.pVa < MIN_VOLTAGE_SEVERE) {
         undervolt_faults++;
     }
-    if (global_mc_data.pVb < MIN_VOLTAGE_SEVERE) {
+    if (g_mc_data.pVb < MIN_VOLTAGE_SEVERE) {
         undervolt_faults++;
     }
-    if (global_mc_data.pVc < MIN_VOLTAGE_SEVERE) {
+    if (g_mc_data.pVc < MIN_VOLTAGE_SEVERE) {
         undervolt_faults++;
     }
 
-    if (global_mc_data.pVa > MAX_VOLTAGE_SEVERE) {
+    if (g_mc_data.pVa > MAX_VOLTAGE_SEVERE) {
         overvolt_faults++;
     }
-    if (global_mc_data.pVb > MAX_VOLTAGE_SEVERE) {
+    if (g_mc_data.pVb > MAX_VOLTAGE_SEVERE) {
         overvolt_faults++;
     }
-    if (global_mc_data.pVc > MAX_VOLTAGE_SEVERE) {
+    if (g_mc_data.pVc > MAX_VOLTAGE_SEVERE) {
         overvolt_faults++;
     }
 
@@ -165,21 +165,21 @@ State_t StateMachineThread::SevereFaultChecking(void)
     }
 
     // Check current for phase outputs
-    if (global_mc_data.pIa > MAX_CURRENT_SEVERE || global_mc_data.pIb > MAX_CURRENT_SEVERE || global_mc_data.pIc > MAX_CURRENT_SEVERE) {
+    if (g_mc_data.pIa > MAX_CURRENT_SEVERE || g_mc_data.pIb > MAX_CURRENT_SEVERE || g_mc_data.pIc > MAX_CURRENT_SEVERE) {
         // error code
         return SevereDangerFault;
     }
 
     // DC fault checking
-    if (global_mc_data.dc_voltage > MAX_DCVOLTAGE_SEVERE) {
+    if (g_mc_data.dc_voltage > MAX_DCVOLTAGE_SEVERE) {
         // error code
         return SevereDangerFault;
     }
-    else if (global_mc_data.dc_voltage < MIN_DCVOLTAGE_SEVERE) {
+    else if (g_mc_data.dc_voltage < MIN_DCVOLTAGE_SEVERE) {
         // error code
         return SevereDangerFault;
     }
-    if (global_mc_data.dc_cap_temp > MAX_DCCAP_TEMP_SEVERE) {
+    if (g_mc_data.dc_cap_temp > MAX_DCCAP_TEMP_SEVERE) {
         return SevereDangerFault;
     }
     return NoFault;
@@ -241,7 +241,7 @@ State_t StateMachineThread::AutoPilotEvent(void)
     if (!Queue_empty(&RX_QUEUE)) {
         CANFrame rx_frame = CANBus_get_frame();
         uint8_t state_id = CANFrame_get_field(&rx_frame, STATE_ID);
-        int distance_to_end = TRACK_LENGTH - global_mc_data.curr_pos;
+        int distance_to_end = TRACK_LENGTH - g_mc_data.curr_pos;
         if (state_id == EMERGENCY_BRAKE || state_id == SYSTEM_FAILURE) {
             return SevereDangerFault;
             // TODO: Talk to Ryan/Dev when to enter MinorDangerFault
