@@ -75,16 +75,16 @@ void MeasurementsThread::processData() {
             // NOTE: the ordering might change depending physical arrangement later on
             case 7:
             // Note: dc_cap_temp dne for Powerboard rev 2 but will for the next rev
-               g_mc_data.dc_cap_temp =  ADC_TO_TEMP_LUT[val];
+               g_mc_data.fet_temps[0] =  ADC_TO_TEMP_LUT[val];
                break;
             case 8:
-               g_mc_data.fet_temps[0] = ADC_TO_TEMP_LUT[val];
+               g_mc_data.fet_temps[1] =  ADC_TO_TEMP_LUT[val];
                break;
             case 9:
-               g_mc_data.fet_temps[1] = ADC_TO_TEMP_LUT[val];
+               g_mc_data.fet_temps[2] =  ADC_TO_TEMP_LUT[val];
                break;
             case 10:
-               g_mc_data.fet_temps[2] = ADC_TO_TEMP_LUT[val];
+               g_mc_data.dc_cap_temp =  ADC_TO_TEMP_LUT[val];
                break;
 
         }
@@ -99,7 +99,6 @@ void MeasurementsThread::startADCandDMA() {
         &hadc1, (uint32_t*)ADC_buffer, ADC_NUM_CONVERSIONS*ADC_DECIMATION_COEFF);
     
     if (status != HAL_OK) {
-        printf("Error: HAL_ADC_Start_DMA failed with status code %d\r\n", status);
         Error_Handler();
     }
     
