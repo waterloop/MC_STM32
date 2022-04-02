@@ -3,4 +3,5 @@ bin/
 build/
 Debug/
 .DS_Store
+.vscode/
 
