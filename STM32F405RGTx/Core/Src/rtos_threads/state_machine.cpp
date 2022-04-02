@@ -18,7 +18,6 @@ StateMachine *StateMachineThread::SM;
 uint8_t idle_state_id;
 uint8_t run_state_id;
 uint8_t mc_error_code;
-uint32_t dummy_code = 0x01;
 
 void StateMachineThread::setState(State_t target_state) {
     NewState = target_state;
@@ -191,15 +190,7 @@ State_t StateMachineThread::InitializeEvent(void) {
 
 State_t StateMachineThread::IdleEvent(void) {
     SetLedColour(0.0, 50.0, 0.0);
-/*     State_t normal_fault_check = NormalFaultChecking();
-    State_t severe_fault_check = SevereFaultChecking();
-    if (severe_fault_check == SevereDangerFault) {
-        return severe_fault_check;
-    }
-    else if (normal_fault_check == NormalDangerFault) {
-        return normal_fault_check;
-    }
- */
+
     // TODO: Make list of the threads that need to be turned on or turned off
         // On: Measurements Thread, CANZThread
         // Off: PIDThread, VHzThread, SVPWMThread
@@ -297,7 +288,7 @@ State_t StateMachineThread::InitializeFaultEvent(void)
 
     if (CurrentState != NewState) {
         CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_SEVERITY_CODE.id);
-        CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_SEVERITY_CODE, 0x01); // dummy
+        CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_SEVERITY_CODE, 0x01); 
         CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_ERROR_CODE, mc_error_code);
     }
     /* After everything is merged
@@ -352,10 +343,12 @@ State_t StateMachineThread::NormalDangerFaultEvent(void)
 State_t StateMachineThread::SevereDangerFaultEvent(void)
 {
     bool flash = true;
-    while(1) {
+    int flashLimit = 0;
+    while( flashLimit < 20) {
         flash ? SetLedColour(50.00, 0.0,0.0) : SetLedColour(0.0,0.0,0.0);
         flash = !flash;
-        osDelay(200);
+        osDelay(STATE_MACHINE_PERIODICITY);
+        flashLimit++;
     }
 
     // TODO: Make list of the threads that need to be turned on or turned off
@@ -455,6 +448,6 @@ void StateMachineThread::runStateMachine(void *argument)
             Error_Handler();
         }
         SendCANHeartbeat();
-        osDelay(200);
+        osDelay(STATE_MACHINE_PERIODICITY);
     }
 }

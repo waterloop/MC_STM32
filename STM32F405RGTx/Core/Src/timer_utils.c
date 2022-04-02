@@ -8,13 +8,13 @@ void set_led_intensity(uint8_t color, float intensity)
     switch (color)
     {
     case 1:
-        htim1.Instance->CCR1 = ccr_val;
+        htim3.Instance->CCR1 = ccr_val;
         break;
     case 2:
-        htim1.Instance->CCR2 = ccr_val;
+        htim3.Instance->CCR2 = ccr_val;
         break;        
     case 3:
-        htim1.Instance->CCR3 = ccr_val;
+        htim3.Instance->CCR3 = ccr_val;
         break;
     }
 }
