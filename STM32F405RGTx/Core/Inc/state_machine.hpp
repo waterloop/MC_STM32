@@ -63,19 +63,11 @@ typedef enum
     NoFault,
 } State_t;
 
-typedef State_t (*pfEvent)(void);
-
-typedef struct {
-    State_t State;
-    pfEvent Event;
-} StateMachine;
 
 class StateMachineThread{
     public:
         static void initialize();
         static void setState(State_t state);
-
-        static StateMachine *SM;
 
     private:
         static RTOSThread thread;

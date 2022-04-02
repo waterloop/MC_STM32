@@ -13,7 +13,6 @@ RTOSThread StateMachineThread::thread;
 
 State_t StateMachineThread::NewState;
 State_t StateMachineThread::CurrentState;
-StateMachine *StateMachineThread::SM;
 
 uint8_t idle_state_id;
 uint8_t run_state_id;
@@ -254,10 +253,7 @@ State_t StateMachineThread::ManualControlEvent(void)
         CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_STATE_ID_ACK_NACK, idle_state_id);
         if (CANBus_put_frame(&tx_frame) != HAL_OK) { Error_Handler(); }
 
-        CANFrame tx_frame1 = CANFrame_init(MANUAL_CONTROL_1);
-        uint8_t target_speed = CANFrame_get_field(&tx_frame1, TARGET_SPEED);
-        CANFrame_set_field(&tx_frame1, TARGET_SPEED, target_speed);
-        // Not sure what to put for target frequency
+        // TODO: Listen to CAN bus and get TARGET_SPEED from MANUAL_CONTROL
     }
 
     // List of the threads that need to be turned on or turned off
@@ -395,18 +391,6 @@ void StateMachineThread::initialize()
         1024 * 3,
         osPriorityNormal,
         runStateMachine);
-
-    StateMachine stateMachine[9] = {
-        {Initialize, InitializeEvent},
-        {InitializeFault, InitializeFaultEvent},
-        {Idle, IdleEvent},
-        {AutoPilot, AutoPilotEvent},
-        {ManualControl, ManualControlEvent},
-        {NormalDangerFault, NormalDangerFaultEvent},
-        {SevereDangerFault, SevereDangerFaultEvent},
-        {NoFault, NoFaultEvent},
-    };
-    SM = stateMachine;
 }
 
 void StateMachineThread::runStateMachine(void *argument)
