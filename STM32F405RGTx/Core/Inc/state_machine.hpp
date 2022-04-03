@@ -71,9 +71,10 @@ class StateMachineThread{
         static RTOSThread thread;
         static State_t CurrentState;
         static State_t NewState;
-
+        static void SetLedColour(float R, float G, float B);
         static void runStateMachine(void *arg);
         static void SendCANHeartbeat(void);
+        static void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
         static State_t NormalFaultChecking(void);
         static State_t SevereFaultChecking(void);
         static State_t InitializeEvent(void);

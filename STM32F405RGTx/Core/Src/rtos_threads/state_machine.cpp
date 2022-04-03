@@ -31,15 +31,13 @@ void StateMachineThread::setState(State_t target_state) {
     NewState = target_state;
 }
 
-void SetLedColour(float R, float G, float B)
-{
+void StateMachineThread::SetLedColour(float R, float G, float B) {
     set_led_intensity(RED, R);
     set_led_intensity(GREEN, G);
     set_led_intensity(BLUE, B);
 }
 
-void StateMachineThread::SendCANHeartbeat(void)
-{
+void StateMachineThread::SendCANHeartbeat(void) {
     float avg_MC_current = (g_mc_data.pIa + g_mc_data.pIb + g_mc_data.pIc) / 3;
     float avg_MC_voltage = (g_mc_data.pVa + g_mc_data.pVb + g_mc_data.pVc) / 3;
 
@@ -450,7 +448,7 @@ void StateMachineThread::runStateMachine(void *argument)
     }
 }
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+void StateMachineThread::HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
     if (flash) {
         if (ledON) {
             SetLedColour(0.0, 0.0, 0.0);
