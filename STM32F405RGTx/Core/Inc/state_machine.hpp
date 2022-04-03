@@ -2,7 +2,7 @@
  *
  *    Created on: Jul. 11, 2021
  *            Author: Kanishk Kashyap
- */
+*/
 #pragma once
 
 #include "can.h"
@@ -49,8 +49,7 @@
 
 using namespace std;
 
-typedef enum
-{
+typedef enum {
     Initialize,
     InitializeFault,
     Idle,
@@ -63,7 +62,6 @@ typedef enum
     NoFault,
 } State_t;
 
-
 class StateMachineThread{
     public:
         static void initialize();
@@ -75,8 +73,6 @@ class StateMachineThread{
         static State_t NewState;
 
         static void runStateMachine(void *arg);
-
-        static void SetLedColour(float R, float G, float B);
         static void SendCANHeartbeat(void);
         static State_t NormalFaultChecking(void);
         static State_t SevereFaultChecking(void);

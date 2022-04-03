@@ -18,11 +18,20 @@ uint8_t idle_state_id;
 uint8_t run_state_id;
 uint8_t mc_error_code;
 
+// global colour variables (used by tim7 interrupt)
+float red;
+float green;
+float blue;
+
+// global blink variables
+bool flash;
+bool ledON;
+
 void StateMachineThread::setState(State_t target_state) {
     NewState = target_state;
 }
 
-void StateMachineThread::SetLedColour(float R, float G, float B)
+void SetLedColour(float R, float G, float B)
 {
     set_led_intensity(RED, R);
     set_led_intensity(GREEN, G);
@@ -188,8 +197,6 @@ State_t StateMachineThread::InitializeEvent(void) {
 }
 
 State_t StateMachineThread::IdleEvent(void) {
-    SetLedColour(0.0, 50.0, 0.0);
-
     // TODO: Make list of the threads that need to be turned on or turned off
         // On: Measurements Thread, CANZThread
         // Off: PIDThread, VHzThread, SVPWMThread
@@ -212,9 +219,6 @@ State_t StateMachineThread::IdleEvent(void) {
 
 State_t StateMachineThread::AutoPilotEvent(void)
 {
-    // Set LED colour to yellow
-    SetLedColour(50.0, 50.0, 0.0);
-
     // Send ACK on CAN when stop complete 
     if (NewState != CurrentState) {
         CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_STATE_CHANGE_ACK_NACK);
@@ -245,8 +249,6 @@ State_t StateMachineThread::AutoPilotEvent(void)
 
 State_t StateMachineThread::ManualControlEvent(void)
 {
-    // Set LED colour to blue
-    SetLedColour(0, 0, 50.0);
     // Send ACK on CAN when stop complete
     if (NewState != CurrentState) {
         CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_STATE_CHANGE_ACK_NACK);
@@ -280,8 +282,6 @@ State_t StateMachineThread::ManualControlEvent(void)
 
 State_t StateMachineThread::InitializeFaultEvent(void)
 {
-    SetLedColour(50.0, 0.0, 0.0);
-
     if (CurrentState != NewState) {
         CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_SEVERITY_CODE.id);
         CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_SEVERITY_CODE, 0x01); 
@@ -306,8 +306,6 @@ State_t StateMachineThread::InitializeFaultEvent(void)
 
 State_t StateMachineThread::NormalDangerFaultEvent(void)
 {
-    // Set LED colour to red
-    SetLedColour(50.00, 0.0, 0.0);
     
     // Report fault on CAN
     CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_SEVERITY_CODE.id);
@@ -338,14 +336,6 @@ State_t StateMachineThread::NormalDangerFaultEvent(void)
 
 State_t StateMachineThread::SevereDangerFaultEvent(void)
 {
-    bool flash = true;
-    int flashLimit = 0;
-    while( flashLimit < 20) {
-        flash ? SetLedColour(50.00, 0.0,0.0) : SetLedColour(0.0,0.0,0.0);
-        flash = !flash;
-        osDelay(STATE_MACHINE_PERIODICITY);
-        flashLimit++;
-    }
 
     // TODO: Make list of the threads that need to be turned on or turned off
         // On: Measurements Thread, CANThread
@@ -384,8 +374,7 @@ State_t StateMachineThread::NoFaultEvent() {
     return NoFault;
 }
 
-void StateMachineThread::initialize()
-{
+void StateMachineThread::initialize() {
     thread = RTOSThread(
         "state_machine_thread",
         1024 * 3,
@@ -395,6 +384,7 @@ void StateMachineThread::initialize()
 
 void StateMachineThread::runStateMachine(void *argument)
 {
+    start_timers();
     while (1)
     {
         CurrentState = NewState;
@@ -405,26 +395,50 @@ void StateMachineThread::runStateMachine(void *argument)
             break;
 
         case InitializeFault:
+            red = 50.0;
+            green = 0.0;
+            blue = 0.0;
+            flash = false;
             NewState = InitializeFaultEvent();
             break;
 
         case Idle:
+            red = 0.0;
+            green = 50.0;
+            blue = 0.0;
+            flash = false;
             NewState = IdleEvent();
             break;
 
         case AutoPilot:
+            red = 50.0;
+            green = 50.0;
+            blue = 0.0;
+            flash = false;
             NewState = AutoPilotEvent();
             break;
 
         case ManualControl:
+            red = 0.0;
+            green = 0.0;
+            blue = 50.0;
+            flash = false;
             NewState = ManualControlEvent();
             break;
 
         case NormalDangerFault:
+            red = 50.0;
+            green = 0.0;
+            blue = 0.0;
+            flash = false;
             NewState = NormalDangerFaultEvent();
             break;
 
         case SevereDangerFault:
+            red = 50.0;
+            green = 0.0;
+            blue = 0.0;
+            flash = true;
             NewState = SevereDangerFaultEvent();
             break;
 
@@ -433,5 +447,26 @@ void StateMachineThread::runStateMachine(void *argument)
         }
         SendCANHeartbeat();
         osDelay(STATE_MACHINE_PERIODICITY);
+    }
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+    if (flash)
+    {
+        if (ledON)
+        {
+            SetLedColour(0.0, 0.0, 0.0);
+        }
+        else
+        {
+            SetLedColour(red, green, blue);
+        }
+
+        ledON = !ledON;
+    }
+    else
+    { // non-flashing colour
+        SetLedColour(red, green, blue);
     }
 }
