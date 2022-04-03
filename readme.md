@@ -12,7 +12,7 @@ git submodule update --init --recursive
 
 # Build
 
-Start by building the `WLoopCan` submodule and then the MC files
+Start by building the `WLoopCan` and `WLoopUtil` submodules and then the MC files
 
 ``` bash
 cd /path/to/MC_STM32
