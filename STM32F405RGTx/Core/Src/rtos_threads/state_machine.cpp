@@ -449,6 +449,14 @@ void StateMachineThread::runStateMachine(void *argument)
 }
 
 void StateMachineThread::HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+    /*
+     * tim14 should call interrupt every 500 ms
+     * freq = clock freq / (prescalar + 1) * (counter period + 1) * (repetition counter + 1)
+     *      = 160 MHz/(9999 + 1)(7999+1)(1)
+     *      = 160 MHz/(10000)(8000)
+     *      = 2 Hz
+     * period = 1/2 s = 500 ms
+     */
     if (flash) {
         if (ledON) {
             SetLedColour(0.0, 0.0, 0.0);
