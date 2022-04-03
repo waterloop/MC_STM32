@@ -450,23 +450,17 @@ void StateMachineThread::runStateMachine(void *argument)
     }
 }
 
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-    if (flash)
-    {
-        if (ledON)
-        {
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+    if (flash) {
+        if (ledON) {
             SetLedColour(0.0, 0.0, 0.0);
         }
-        else
-        {
+        else {
             SetLedColour(red, green, blue);
         }
-
         ledON = !ledON;
     }
-    else
-    { // non-flashing colour
+    else { // non-flashing colour
         SetLedColour(red, green, blue);
     }
 }
