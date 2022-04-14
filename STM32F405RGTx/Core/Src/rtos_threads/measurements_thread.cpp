@@ -23,6 +23,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
         Error_Handler();
     }
     osThreadFlagsSet(MeasurementsThread::getThreadId(), 0x00000001U);        // set flag to signal that ADC conversion has completed
+    osThreadFlagsSet(MeasurementsThread::getThreadId(), 0x00000002U);        // set flag to signal that Injected ADC conversion has completed
 }
 
 void MeasurementsThread::initialize(){
@@ -48,47 +49,66 @@ void MeasurementsThread::processData() {
 
             // read and convert phase voltages and dc voltage
             case 0:
-               g_mc_data.pVa = VOLTAGE_DIVIDER_CONVERSION( ADC_TO_VOLTAGE( val ) );
+               g_mc_data.pVa = ADC_TO_VOLTAGE( val );
+               //VOLTAGE_DIVIDER_CONVERSION( ADC_TO_VOLTAGE( val ) );
                break;
             case 1:
-               g_mc_data.pVb = VOLTAGE_DIVIDER_CONVERSION( ADC_TO_VOLTAGE( val ) );
+               g_mc_data.pVb = ADC_TO_VOLTAGE( val );
+            //    VOLTAGE_DIVIDER_CONVERSION( ADC_TO_VOLTAGE( val ) );
                break;
             case 2:
-               g_mc_data.pVc = VOLTAGE_DIVIDER_CONVERSION( ADC_TO_VOLTAGE( val ) );
+               g_mc_data.pVc = ADC_TO_VOLTAGE( val );
+            //    VOLTAGE_DIVIDER_CONVERSION( ADC_TO_VOLTAGE( val ) );
                break;
             case 3:
-               g_mc_data.dc_voltage = VOLTAGE_DIVIDER_CONVERSION( ADC_TO_VOLTAGE( val ) );
+               g_mc_data.dc_voltage = ADC_TO_VOLTAGE( val );
+            //    VOLTAGE_DIVIDER_CONVERSION( ADC_TO_VOLTAGE( val ) );
                break;
 
             // read and convert phase currents
             case 4:
-               g_mc_data.pIa = VOLTAGE_TO_CURRENT( ADC_TO_VOLTAGE(val) );
+               g_mc_data.pIa =
+               g_mc_data.pIb =
+               g_mc_data.pIc = ADC_TO_VOLTAGE( val );
+               //VOLTAGE_TO_CURRENT( ADC_TO_VOLTAGE(val) );
                break;
             case 5:
-               g_mc_data.pIb = VOLTAGE_TO_CURRENT( ADC_TO_VOLTAGE(val) );
+               g_mc_data.pIb = ADC_TO_VOLTAGE( val );
+            //    VOLTAGE_TO_CURRENT( ADC_TO_VOLTAGE(val) );
                break;
             case 6:
-               g_mc_data.pIc = VOLTAGE_TO_CURRENT( ADC_TO_VOLTAGE(val) );
+               g_mc_data.pIc = ADC_TO_VOLTAGE( val );
+            //    VOLTAGE_TO_CURRENT( ADC_TO_VOLTAGE(val) );
                break;
 
             // read and convert adc temperatures
             // NOTE: the ordering might change depending physical arrangement later on
             case 7:
             // Note: dc_cap_temp dne for Powerboard rev 2 but will for the next rev
-               g_mc_data.fet_temps[0] =  ADC_TO_TEMP_LUT[val];
+               g_mc_data.fet_temps[0] =  ADC_TO_VOLTAGE( val );
+               //ADC_TO_TEMP_LUT[val];
                break;
             case 8:
-               g_mc_data.fet_temps[1] =  ADC_TO_TEMP_LUT[val];
+               g_mc_data.fet_temps[1] =  ADC_TO_VOLTAGE( val );
+               //ADC_TO_TEMP_LUT[val];
                break;
             case 9:
-               g_mc_data.fet_temps[2] =  ADC_TO_TEMP_LUT[val];
+               g_mc_data.fet_temps[2] = ADC_TO_VOLTAGE( val );
+               // ADC_TO_TEMP_LUT[val];
                break;
             case 10:
-               g_mc_data.dc_cap_temp =  ADC_TO_TEMP_LUT[val];
+               g_mc_data.dc_cap_temp = ADC_TO_VOLTAGE( val );
+               // ADC_TO_TEMP_LUT[val];
                break;
 
         }
     }
+}
+
+void MeasurementsThread::processInjectedData() {
+    g_mc_data.pIa = HAL_ADCEx_InjectedGetValue(hadc, ADC_INJECTED_RANK_1);
+    g_mc_data.pIb = HAL_ADCEx_InjectedGetValue(hadc, ADC_INJECTED_RANK_2);
+    g_mc_data.pIc = HAL_ADCEx_InjectedGetValue(hadc, ADC_INJECTED_RANK_3);
 }
 
 void MeasurementsThread::startADCandDMA() {
@@ -114,6 +134,9 @@ void MeasurementsThread::runMeasurements(void* args) {
         osThreadFlagsWait(0x00000001U, osFlagsWaitAll, 0U);
         processData();
         startADCandDMA();
+
+        osThreadFlagsWait(0x00000002U, osFlagsWaitAll, 0U);
+        processInjectedData();
     }
 }
 
