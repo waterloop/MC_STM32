@@ -10,15 +10,20 @@ class MC {
         float pVa;
         float pVb;
         float pVc;
+        
         // DC battery voltage
         float dc_voltage;
+        
         // Phase currents
         float pIa;
         float pIb;
         float pIc;
-        // MOSFET and DC link capacitor temperatures
+        
+        // MOSFET and DC Link Capacitor temperatures
         float fet_temps[3];
+        // Note: dc_cap_temp dne for Powerboard rev 2 but will for the next rev
         float dc_cap_temp;
+        
         // Current position, speed, and acceleration
         float curr_pos;
         float curr_speed;
@@ -29,4 +34,3 @@ class MC {
 int mc_entry();
 
 extern MC g_mc_data;
-
