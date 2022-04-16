@@ -16,11 +16,11 @@ class LEDThread {
 
     private:
         static RTOSThread thread_;
-        static uint8_t on;
         static float R;
         static float G;
         static float B;
         static uint8_t blink;
+        static uint8_t on;
 
     private:
         static void runLEDThread(void* args);

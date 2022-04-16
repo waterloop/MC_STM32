@@ -6,7 +6,7 @@
 #include "led_thread.hpp"
 
 // Thread Periodicities (ms)
-#define MEASUREMENTS_THREAD_PERIOD      10
-#define STATE_MACHINE_THREAD_PERIOD     20
-#define LED_THREAD_PERIOD               200
+#define MEASUREMENTS_THREAD_PERIODICITY      10
+#define STATE_MACHINE_THREAD_PERIODICITY     20
+#define LED_THREAD_PERIODICITY               200
 

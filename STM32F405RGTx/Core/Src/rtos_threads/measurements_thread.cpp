@@ -114,6 +114,8 @@ void MeasurementsThread::runMeasurements(void* args) {
         osThreadFlagsWait(0x00000001U, osFlagsWaitAll, 0U);
         processData();
         startADCandDMA();
+
+        osDelay(MEASUREMENTS_THREAD_PERIODICITY);
     }
 }
 

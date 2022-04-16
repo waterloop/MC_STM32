@@ -4,6 +4,12 @@
 #include "led_thread.hpp"
 
 RTOSThread LEDThread::thread_;
+float LEDThread::R;
+float LEDThread::G;
+float LEDThread::B;
+uint8_t LEDThread::blink;
+uint8_t LEDThread::on;
+
 
 void LEDThread::initialize() {
     LEDThread::thread_ = RTOSThread(
@@ -32,7 +38,7 @@ void LEDThread::runLEDThread(void* args) {
 
         LEDThread::on ^= LEDThread::blink;
 
-        osDelay(LED_THREAD_PERIOD);
+        osDelay(LED_THREAD_PERIODICITY);
     }
 }
 

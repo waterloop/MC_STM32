@@ -2,11 +2,13 @@
 #include "main.h"
 #include "cmsis_os.h"
 #include "can.h"
+#include "timer_utils.h"
 #include "drv8323.h"
 #include "mc.hpp"
 #include "threads.hpp"
 
 Drv8323 drv8323;
+MC g_mc_data;
 
 // redirect stdin and stdout to UART1
 void __io_putchar(uint8_t ch) {
@@ -19,14 +21,17 @@ uint8_t __io_getchar() {
     return ch;
 }
 
-MC g_mc_data;
-
 int mc_entry() {
-    printf("initializing CAN...");
+    printf("\r\n");
+    printf("initializing CAN...\r\n");
     if (CANBus_init(&hcan1, &htim7) != HAL_OK) { Error_Handler(); }
     if (CANBus_subscribe(STATE_CHANGE_REQ) != HAL_OK) { Error_Handler(); }
     //if (CANBus_subscribe_mask(BUS_TEST_REQ_BASE, BUS_TEST_REQ_MSK) != HAL_OK) { Error_Handler(); }
     //if (CANBus_subscribe_mask(BUS_TEST_RESP_BASE, BUS_TEST_MSK) != HAL_OK) { Error_Handler(); }
+
+    printf("starting LED PWM...\r\n");
+    start_rgb_pwm();
+
 
     // printf("initializing drivers...\r\n");
     // drv8323 = Drv8323_init();
@@ -36,7 +41,6 @@ int mc_entry() {
     osKernelInitialize();
 
     printf("initializing rtos threads...\r\n");
-    
     MeasurementsThread::initialize();
     // StateMachineThread::initialize();
     LEDThread::initialize();
