@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "main.h"
 #include "cmsis_os.h"
+#include "can.h"
 #include "drv8323.h"
 #include "mc.hpp"
 #include "threads.hpp"
@@ -21,9 +22,14 @@ uint8_t __io_getchar() {
 MC g_mc_data;
 
 int mc_entry() {
-    printf("initializing drivers...\r\n");
-    drv8323 = Drv8323_init();
-    if (Drv8323_setup(&drv8323) != DRV8323_OK) { Error_Handler(); };
+    printf("initializing CAN...");
+    if (CANBus_init(&hcan1, &htim7) != HAL_OK) { Error_Handler(); }
+    if (CANBus_subscribe(STATE_CHANGE_REQ) != HAL_OK) { Error_Handler(); }
+    if (CANBus_subscribe_mask(0, BUS_TEST_REQ_MASK) != HAL_OK) { Error_Handler(); }
+
+    // printf("initializing drivers...\r\n");
+    // drv8323 = Drv8323_init();
+    // if (Drv8323_setup(&drv8323) != DRV8323_OK) { Error_Handler(); };
 
     printf("initializing rtos kernel...\r\n");
     osKernelInitialize();

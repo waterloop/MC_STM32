@@ -4,4 +4,5 @@ build/
 Debug/
 .DS_Store
 .vscode/
+.clangd/
 
