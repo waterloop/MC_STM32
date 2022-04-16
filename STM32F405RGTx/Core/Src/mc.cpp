@@ -25,7 +25,8 @@ int mc_entry() {
     printf("initializing CAN...");
     if (CANBus_init(&hcan1, &htim7) != HAL_OK) { Error_Handler(); }
     if (CANBus_subscribe(STATE_CHANGE_REQ) != HAL_OK) { Error_Handler(); }
-    if (CANBus_subscribe_mask(0, BUS_TEST_REQ_MASK) != HAL_OK) { Error_Handler(); }
+    //if (CANBus_subscribe_mask(BUS_TEST_REQ_BASE, BUS_TEST_REQ_MSK) != HAL_OK) { Error_Handler(); }
+    //if (CANBus_subscribe_mask(BUS_TEST_RESP_BASE, BUS_TEST_MSK) != HAL_OK) { Error_Handler(); }
 
     // printf("initializing drivers...\r\n");
     // drv8323 = Drv8323_init();
@@ -37,6 +38,8 @@ int mc_entry() {
     printf("initializing rtos threads...\r\n");
     
     MeasurementsThread::initialize();
+    // StateMachineThread::initialize();
+    LEDThread::initialize();
 
     printf("starting rtos scheduler...\r\n");
     osKernelStart();

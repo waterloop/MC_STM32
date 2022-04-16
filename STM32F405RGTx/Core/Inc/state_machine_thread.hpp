@@ -71,6 +71,7 @@ class StateMachineThread{
         static RTOSThread thread;
         static State_t CurrentState;
         static State_t NewState;
+
         static void SetLedColour(float R, float G, float B);
         static void runStateMachine(void *arg);
         static void SendCANHeartbeat(void);

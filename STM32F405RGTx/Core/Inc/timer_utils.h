@@ -13,7 +13,7 @@ typedef enum {
     RED     = 1
 } LED_COLOR;
 
-void set_led_intensity(LED_COLOR colour, float intensity);
+void set_LED_intensity(LED_COLOR colour, float intensity);
 void start_rgb_pwm();
 
 void start_motor_pwm();

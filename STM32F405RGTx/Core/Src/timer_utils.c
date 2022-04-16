@@ -2,7 +2,7 @@
 #include "main.h"
 #include "timer_utils.h"
 
-void set_led_intensity(LED_COLOR color, float intensity) {
+void set_LED_intensity(LED_COLOR color, float intensity) {
     uint32_t ccr_val = (uint32_t)( ((100 - intensity)*htim3.Instance->ARR)/100 );
     switch (color) {
         case 1:
