@@ -10,17 +10,6 @@
 Drv8323 drv8323;
 MC g_mc_data;
 
-// redirect stdin and stdout to UART1
-void __io_putchar(uint8_t ch) {
-    HAL_UART_Transmit(&huart4, &ch, 1, 0xffff);
-}
-uint8_t __io_getchar() {
-    uint8_t ch;
-    HAL_UART_Receive(&huart4, &ch, 1, 0xffff);
-    HAL_UART_Transmit(&huart4, &ch, 1, 0xffff);
-    return ch;
-}
-
 int mc_entry() {
     printf("\r\n");
     printf("initializing CAN...\r\n");
@@ -42,7 +31,7 @@ int mc_entry() {
 
     printf("initializing rtos threads...\r\n");
     MeasurementsThread::initialize();
-    // StateMachineThread::initialize();
+    StateMachineThread::initialize();
     LEDThread::initialize();
 
     printf("starting rtos scheduler...\r\n");
