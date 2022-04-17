@@ -42,9 +42,6 @@
 #define TRACK_LENGTH                100
 #define DISTANCE_THRESHOLD          6
 
-
-// fault codes
-
 // using namespace std;
 
 typedef enum {
