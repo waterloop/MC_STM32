@@ -29,17 +29,18 @@
 #include <time.h>
 #include <sys/time.h>
 #include <sys/times.h>
-
+#include "main.h"
 
 /* Variables */
 extern int __io_putchar(int ch) __attribute__((weak));
 extern int __io_getchar(void) __attribute__((weak));
 
 // redirect stdin and stdout to UART1
-void __io_putchar(uint8_t ch) {
+int __io_putchar(int ch) {
     HAL_UART_Transmit(&huart4, &ch, 1, 0xffff);
+	return 0;
 }
-uint8_t __io_getchar() {
+int __io_getchar() {
     uint8_t ch;
     HAL_UART_Receive(&huart4, &ch, 1, 0xffff);
     HAL_UART_Transmit(&huart4, &ch, 1, 0xffff);
