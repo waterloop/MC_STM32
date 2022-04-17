@@ -4,9 +4,10 @@
 #include "main.h"
 #include "threads.hpp"
 
-SVPWMThread svpwm;
+SVPWM SVPWMThread::svpwm;
 int OldSector;
 RTOSThread SVPWMThread::thread;
+VHZPROFILE SVPWMThread::vhz;
 
 void SVPWMThread::initialize(){
    	thread = RTOSThread(
@@ -21,14 +22,14 @@ void SVPWMThread::runPWM(void* arg) {
 
 	while(1) {
 		osThreadFlagsWait(0x00000001U, osFlagsWaitAll, 0U);
-		OldSector = svpwm.SectorPointer;
-		VHZ_Update(&vhz);
-		svpwm.SVPWM_Update(&svpwm, &vhz, &htim1);
+//		OldSector = svpwm.SectorPointer;
+		vhz.VHZ_Update(&vhz);
+		SVPWM_Update(&svpwm, &vhz, &htim1);
 	}
 
 }
 
-void SVPWMThread::SVPWM_Update(SVPWMThread *svm, VHZPROFILE *vhz, TIM_HandleTypeDef *htim){
+void SVPWMThread::SVPWM_Update(SVPWM *svm, VHZPROFILE *vhz, TIM_HandleTypeDef *htim){
 
 	svpwm.ModIndex = MODINDEX; /*vhz->Volt / vhz->VoltRated;*/
 	svpwm.FundamentalFreq = FUNDAMENTAL_FREQ; /*vhz->Freq;*/

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "VHZ.h"
+#include "vhz_thread.hpp"
 #include "main.h"
 #include "util.hpp"
 
@@ -10,34 +10,38 @@
 #define RADIANS 		       6.28318530718f
 #define SIN_PI_THIRD 	       0.86602540378f
 
+class SVPWM{
+    public:
+        float  ModIndex;
+		 float  FundamentalFreq;
+         float  SwitchFreq;
+         float  Alpha;
+         float  NewEntry;
+         float  SectorPointer;
+		 float  U;
+         float  V;
+		 float  W;
+		 float  StepAngle;
+		 float  EntryOld;
+		 float  ta;
+		 float  tb;
+         float  to;
+
+};
+
 class SVPWMThread{
     public:
         static void initialize();
 
         static VHZPROFILE vhz;
         static TIM_HandleTypeDef *htim;
+        static SVPWM svpwm;
 
         static void runPWM(void * args);
-        void SVPWM_Update(SVPWMThread *svm, VHZPROFILE *vhz, TIM_HandleTypeDef *htim);
+        static void SVPWM_Update(SVPWM *svm, VHZPROFILE *vhz, TIM_HandleTypeDef *htim);
         static osThreadId_t getThreadId();
-
-        static float  ModIndex;
-		static float  FundamentalFreq;
-        static float  SwitchFreq;
-        static float  Alpha;
-        static float  NewEntry;
-        static float  SectorPointer;
-		static float  U;
-        static float  V;
-		static float  W;
-		static float  StepAngle;
-		static float  EntryOld;
-		static float  ta;
-		static float  tb;
-        static float  to;
 
     private:
         static RTOSThread thread;
 };
 
-extern SVPWMThread svpwm;
