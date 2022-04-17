@@ -2,9 +2,7 @@
 File name:       VHZ_PROF.H  
 ===================================================================================*/
 
-
-#ifndef __VHZ_PROF_H__
-#define __VHZ_PROF_H__
+#pragma once
 
 
 typedef struct 	{
@@ -21,5 +19,3 @@ typedef struct 	{
 
 void VHZ_Update(VHZPROFILE *vhz);
 void VHZ_Init(VHZPROFILE *vhz, float FreqMin, float FreqRated, float VoltMin, float VoltRated);
-
-#endif  // __VHZ_PROF_H__

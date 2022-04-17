@@ -4,97 +4,97 @@
 #include "threads.hpp"
 #include "math.h"
 
-SVPWM::SVPWM(float SwitchFreq, VHZPROFILE *vhz, TIM_HandleTypeDef *htim){
-	ModIndex = 0;
-	Freq = 0;
-	SwitchFreq = SwitchFreq;
-	Alpha = 0;
-	NewEntry = 0;
-	SectorPointer = 0;
-	U = 0;
-	V = 0;
-	W = 0;
-	StepAngle = 0;
-	EntryOld = 0;
-	ta = 0;
-	tb = 0;
-	to = 0;
+SVPWMThread svpwm;
+int OldSector;
+RTOSThread SVPWMThread::thread;
 
-	vhz = vhz;
-	htim = htim;
-}
-
-void SVPWM::initialize(){
+void SVPWMThread::initialize(){
    	thread = RTOSThread(
         "svpwm_thread",
         1024,
         osPriorityAboveNormal,
-		update 
+		runPWM
     );
 }
 
-void SVPWM::update(void* arg){
-    ModIndex = 0.9; /*vhz->Volt / vhz->VoltRated;*/
-	Freq = 1; /*vhz->Freq;*/
-	StepAngle = (RADIANS * Freq) / SwitchFreq;
-    EntryOld = NewEntry;
-    Alpha = Alpha + StepAngle;
+void SVPWMThread::runPWM(void* arg) {
 
-	if (Alpha >= PI_THIRD) {
-		Alpha = Alpha-PI_THIRD;
+	while(1) {
+		osThreadFlagsWait(0x00000001U, osFlagsWaitAll, 0U);
+		OldSector = svpwm.SectorPointer;
+		VHZ_Update(&vhz);
+		svpwm.SVPWM_Update(&svpwm, &vhz, &htim1);
 	}
 
-	NewEntry = Alpha;
-	ta = sinf(PI_THIRD - NewEntry) * ModIndex * SwitchFreq;
-	tb = sinf(NewEntry) * ModIndex * SwitchFreq;
-	to = (SwitchFreq - ta - tb) / 2;
+}
 
-    if (NewEntry - EntryOld < 0) {
-      	if (SectorPointer == 5){
-         	SectorPointer = 0;
+void SVPWMThread::SVPWM_Update(SVPWMThread *svm, VHZPROFILE *vhz, TIM_HandleTypeDef *htim){
+
+	svpwm.ModIndex = MODINDEX; /*vhz->Volt / vhz->VoltRated;*/
+	svpwm.Freq = FREQUENCY; /*vhz->Freq;*/
+	svpwm.StepAngle = (RADIANS * svpwm.Freq) / svpwm.SwitchFreq;
+	svpwm.EntryOld = svpwm.NewEntry;
+	svpwm.Alpha = svpwm.Alpha + svpwm.StepAngle;
+
+	if (svpwm.Alpha >= PI_THIRD) {
+		svpwm.Alpha = svpwm.Alpha-PI_THIRD;
+	}
+
+	svpwm.NewEntry = svpwm.Alpha;
+	svpwm.ta = sinf(PI_THIRD - svpwm.NewEntry) * svpwm.ModIndex * svpwm.SwitchFreq;
+	svpwm.tb = sinf(svpwm.NewEntry) * svpwm.ModIndex * svpwm.SwitchFreq;
+	svpwm.to = (svpwm.SwitchFreq - svpwm.ta - svpwm.tb) / 2;
+
+    if (svpwm.NewEntry - svpwm.EntryOld < 0) {
+      	if (svpwm.SectorPointer == 5){
+      		svpwm.SectorPointer = 0;
       	}
       	else {
-         	SectorPointer = SectorPointer + 1;
+      		svpwm.SectorPointer = svpwm.SectorPointer + 1;
       	}
     }
 
-	if (SectorPointer==0){
-		U = ta + tb + to;
-		V = tb + to;
-		W = to;
+	if (svpwm.SectorPointer==0){
+		svpwm.U = svpwm.ta + svpwm.tb + svpwm.to;
+		svpwm.V = svpwm.tb + svpwm.to;
+		svpwm.W = svpwm.to;
 	}
 
-	else if (SectorPointer==1){
-    	U= ta + to;
-    	V = ta + tb + to;
-    	W = to;
+	else if (svpwm.SectorPointer==1){
+		svpwm.U = svpwm.ta + svpwm.to;
+		svpwm.V = svpwm.ta + svpwm.tb + svpwm.to;
+		svpwm.W = svpwm.to;
     }
 
-    else if (SectorPointer==2){
-    	U = to;
-    	V = ta + tb + to;
-    	W = tb + to;
+    else if (svpwm.SectorPointer==2){
+    	svpwm.U = svpwm.to;
+    	svpwm.V = svpwm.ta + svpwm.tb + svpwm.to;
+    	svpwm.W = svpwm.tb + svpwm.to;
     }
 
-    else if (SectorPointer==3){
-    	U = to;
-    	V = ta + to;
-    	W = ta + tb + to;
+    else if (svpwm.SectorPointer==3){
+    	svpwm.U = svpwm.to;
+    	svpwm.V = svpwm.ta + svpwm.to;
+    	svpwm.W = svpwm.ta + svpwm.tb + svpwm.to;
     }
 
-    else if (SectorPointer==4){
-    	U = tb + to;
-    	V = to;
-    	W = ta + tb + to;
+    else if (svpwm.SectorPointer==4){
+    	svpwm.U = svpwm.tb + svpwm.to;
+    	svpwm.V = svpwm.to;
+    	svpwm.W = svpwm.ta + svpwm.tb + svpwm.to;
     }
 
-    else if (SectorPointer==5){
-    	U = ta + tb + to;
-    	V = to;
-    	W = ta + to;
+    else if (svpwm.SectorPointer==5){
+    	svpwm.U = svpwm.ta + svpwm.tb + svpwm.to;
+    	svpwm.V = svpwm.to;
+    	svpwm.W = svpwm.ta + svpwm.to;
     }
 
-	TIM1->CCR1 = (U/SwitchFreq)*(TIM1->ARR+1);
-	TIM1->CCR2 = (V/SwitchFreq)*(TIM1->ARR+1);
-	TIM1->CCR3 = (W/SwitchFreq)*(TIM1->ARR+1);
+	TIM1->CCR1 = (svpwm.U/svpwm.SwitchFreq)*(TIM1->ARR+1);
+	TIM1->CCR2 = (svpwm.V/svpwm.SwitchFreq)*(TIM1->ARR+1);
+	TIM1->CCR3 = (svpwm.W/svpwm.SwitchFreq)*(TIM1->ARR+1);
 }
+
+osThreadId_t SVPWMThread::getThreadId() {
+    return thread.getThreadId();
+} 

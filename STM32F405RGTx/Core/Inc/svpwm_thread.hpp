@@ -4,11 +4,23 @@
 #include "main.h"
 #include "util.hpp"
 
-#ifndef INC_SVPWM_H_
-#define INC_SVPWM_H_
+#define MODINDEX        0.9             // Set ModIndex here        
+#define FREQUENCY       1               // Set Frequency here (kHz)
+#define	PI_THIRD		1.04719755119660f
+#define RADIANS 		6.28318530718f
+#define SIN_PI_THIRD 	0.86602540378f
 
-class SVPWM{
+class SVPWMThread{
     public:
+        static void initialize();
+
+        static VHZPROFILE vhz;
+        static TIM_HandleTypeDef *htim;
+
+        static void runPWM(void * args);
+        void SVPWM_Update(SVPWMThread *svm, VHZPROFILE *vhz, TIM_HandleTypeDef *htim);
+        static osThreadId_t getThreadId();
+
         static float  ModIndex;
 		static float  Freq;
         static float  SwitchFreq;
@@ -24,19 +36,8 @@ class SVPWM{
 		static float  tb;
         static float  to;
 
-        static VHZPROFILE *vhz;
-        static TIM_HandleTypeDef *htim;
-
-        SVPWM(float SwitchFreq, VHZPROFILE *vhz, TIM_HandleTypeDef *htim);
-        static void initialize();
-        static void update(void* arg);
     private:
         static RTOSThread thread;
 };
 
-
-#define	PI_THIRD		1.04719755119660f
-#define RADIANS 		6.28318530718f
-#define SIN_PI_THIRD 	0.86602540378f
-
-#endif
+extern SVPWMThread svpwm;
