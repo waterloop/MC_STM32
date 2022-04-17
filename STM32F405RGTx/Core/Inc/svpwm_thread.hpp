@@ -4,11 +4,11 @@
 #include "main.h"
 #include "util.hpp"
 
-#define MODINDEX        0.9             // Set ModIndex here        
-#define FREQUENCY       1               // Set Frequency here (kHz)
-#define	PI_THIRD		1.04719755119660f
-#define RADIANS 		6.28318530718f
-#define SIN_PI_THIRD 	0.86602540378f
+#define MODINDEX               0.9                  // Set ModIndex here        
+#define FUNDAMENTAL_FREQ       1                    // Set Frequency here (kHz)
+#define	PI_THIRD		       1.04719755119660f
+#define RADIANS 		       6.28318530718f
+#define SIN_PI_THIRD 	       0.86602540378f
 
 class SVPWMThread{
     public:
@@ -22,7 +22,7 @@ class SVPWMThread{
         static osThreadId_t getThreadId();
 
         static float  ModIndex;
-		static float  Freq;
+		static float  FundamentalFreq;
         static float  SwitchFreq;
         static float  Alpha;
         static float  NewEntry;

@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <math.h>
 #include "main.h"
 #include "threads.hpp"
-#include "math.h"
 
 SVPWMThread svpwm;
 int OldSector;
@@ -31,8 +31,8 @@ void SVPWMThread::runPWM(void* arg) {
 void SVPWMThread::SVPWM_Update(SVPWMThread *svm, VHZPROFILE *vhz, TIM_HandleTypeDef *htim){
 
 	svpwm.ModIndex = MODINDEX; /*vhz->Volt / vhz->VoltRated;*/
-	svpwm.Freq = FREQUENCY; /*vhz->Freq;*/
-	svpwm.StepAngle = (RADIANS * svpwm.Freq) / svpwm.SwitchFreq;
+	svpwm.FundamentalFreq = FUNDAMENTAL_FREQ; /*vhz->Freq;*/
+	svpwm.StepAngle = (RADIANS * svpwm.FundamentalFreq) / svpwm.SwitchFreq;
 	svpwm.EntryOld = svpwm.NewEntry;
 	svpwm.Alpha = svpwm.Alpha + svpwm.StepAngle;
 
