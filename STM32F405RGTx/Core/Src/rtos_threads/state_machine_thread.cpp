@@ -12,6 +12,7 @@
 
 RTOSThread StateMachineThread::thread;
 State_t StateMachineThread::state;
+uint8_t StateMachineThread::enable_fault_check;
 
 void StateMachineThread::setState(State_t state_) { StateMachineThread::state = state_; }
 
@@ -31,25 +32,11 @@ void StateMachineThread::runStateMachine(void* arg) {
         .B = 0,
         .blink = 0
     };
-    StateMachineThread::state = Initialize;
+    StateMachineThread::state = Idle;
+    StateMachineThread::enable_fault_check = true;
 
     while (1) {
         switch (StateMachineThread::state) {
-            case Initialize:
-                StateMachineThread::state = Idle;
-                // state = InitializeEvent();
-                break;
-
-            case InitializeFault:
-                led.R = 50.0;
-                led.G = 0.0;
-                led.B = 0.0;
-                led.blink = 0;
-                LEDThread::setLED(led);
-
-                // state = InitializeFaultEvent();
-                break;
-
             case Idle:
                 led.R = 0.0;
                 led.G = 50.0;
@@ -57,7 +44,7 @@ void StateMachineThread::runStateMachine(void* arg) {
                 led.blink = 0;
                 LEDThread::setLED(led);
 
-                StateMachineThread::state = IdleEvent();
+                // StateMachineThread::state = IdleEvent();
                 break;
 
             case AutoPilot:
@@ -104,11 +91,22 @@ void StateMachineThread::runStateMachine(void* arg) {
                 Error_Handler();
                 break;
         }
-        // send_CAN_heartbeat();
+        if (enable_fault_check) {
+            State_t severe_check = StateMachineThread::SevereFaultChecking();
+            State_t normal_check = StateMachineThread::NormalFaultChecking();
+            if (severe_check != NoFault) {
+                StateMachineThread::state = severe_check;
+            } else if (normal_check != NoFault) {
+                StateMachineThread::state = normal_check;
+            }
+        }
         osDelay(STATE_MACHINE_THREAD_PERIODICITY);
     }
 }
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// FAULT CHECKING
 uint8_t StateMachineThread::check_phase_overvolt(float threshold, uint8_t* phase_msk) {
     uint8_t has_overvolt = 0;
     if (g_mc_data.pVa > threshold) {
@@ -183,37 +181,36 @@ uint8_t StateMachineThread::check_fet_overtemp(float threshold, uint8_t* phase_m
     }
     return has_overtemp;
 }
-
-
-State_t StateMachineThread::NormalFaultChecking(void) {
-    // uint8_t overvolt_faults = 0;
-    // uint8_t undervolt_faults = 0;
-    // uint8_t temp_faults = 0;
+uint8_t StateMachineThread::fault_checking_routine(
+    MCSeverityCode severity, float max_phase_volt, float min_phase_volt, float max_curr,
+    float max_cap_volt,   float min_cap_volt,   float max_fet_temp
+) {
     uint8_t phase_msk = 0;
+    uint8_t has_fault = 0;
 
     if (check_phase_overvolt(MAX_VOLTAGE_NORMAL, &phase_msk)) {
-        report_phase_overvolt(phase_msk);
-        return NormalDangerFault;
+        REPORT_FAULT(severity, PHASE_OVERVOLTAGE, phase_msk)
+        has_fault |= 1;
     }
 
     if (check_phase_undervolt(MIN_VOLTAGE_NORMAL, &phase_msk)) {
-        report_phase_undervolt(phase_msk);
-        return NormalDangerFault;
+        REPORT_FAULT(severity, PHASE_UNDERVOLTAGE, phase_msk);
+        has_fault |= 1;
     }
 
     if (check_phase_overcurr(MAX_CURRENT_NORMAL, &phase_msk)) {
-        report_phase_overcurrent(phase_msk);
-        return NormalDangerFault;
+        REPORT_FAULT(severity, PHASE_OVERCURRENT, phase_msk);
+        has_fault |= 1;
     }
 
     if (check_cap_overvolt(MAX_DC_VOLTAGE_NORMAL)) {
-        report_cap_overvolt();
-        return NormalDangerFault;
+        REPORT_FAULT(severity, DC_CAP_OVERVOLTAGE, 0)
+        has_fault |= 1;
     }
 
     if (check_cap_undervolt(MIN_DC_VOLTAGE_NORMAL)) {
-        report_cap_undervolt();
-        return NormalDangerFault;
+        REPORT_FAULT(severity, DC_CAP_UNDERVOLTAGE, 0)
+        has_fault |= 1;
     }
 
     // if (checK_motor_stall()) {
@@ -222,80 +219,30 @@ State_t StateMachineThread::NormalFaultChecking(void) {
     // }
 
     if (check_fet_overtemp(MAX_FET_TEMP_NORMAL, &phase_msk)) {
-        report_phase_overtemp(phase_msk);
-        return NormalDangerFault;
+        REPORT_FAULT(severity, PHASE_OVERTEMPERATURE, phase_msk)
+        has_fault |= 1;
     }
-    
-    
 
-
-    // check for temperature faults
-    // for (int i = 0; i < NUM_MOSFETS; i++) {
-    //     float mosfetTemp = g_mc_data.fet_temps[i];
-    //     if (mosfetTemp > MAX_MOSFET_TEMP_NORMAL) {
-    //         ++temp_faults;
-    //     }
-    //     if (temp_faults > MIN_TEMP_FAULTS) {
-    //         // TODO: add error code
-    //         return NormalDangerFault;
-    //     }
-    // }
-
-
-    // // check undervolts and overvolts for phase outputs
-    // if (g_mc_data.pVa < MIN_VOLTAGE_NORMAL) {
-    //     undervolt_faults++;
-    // }
-    // if (g_mc_data.pVb < MIN_VOLTAGE_NORMAL) {
-    //     undervolt_faults++;
-    // }
-    // if (g_mc_data.pVc < MIN_VOLTAGE_NORMAL) {
-    //     undervolt_faults++;
-    // }
-
-    // if (g_mc_data.pVa > MAX_VOLTAGE_NORMAL) {
-    //     overvolt_faults++;
-    // }
-    // if (g_mc_data.pVb > MAX_VOLTAGE_NORMAL) {
-    //     overvolt_faults++;
-    // }
-    // if (g_mc_data.pVc > MAX_VOLTAGE_NORMAL) {
-    //     overvolt_faults++;
-    // }
-
-
-    // if (overvolt_faults > MIN_OVERVOLT_FAULTS) {
-    //     return NormalDangerFault;
-    // }
-    // if (undervolt_faults > MIN_UNDERVOLT_FAULTS) {
-    //     return NormalDangerFault;
-    // }
-
-    // // Check current for phase outputs
-    // if (
-    //     (g_mc_data.pIa > MAX_CURRENT_NORMAL) ||
-    //     (g_mc_data.pIb > MAX_CURRENT_NORMAL) ||
-    //     (g_mc_data.pIc > MAX_CURRENT_NORMAL)
-    // ) {
-    //     //TODO: error code
-    //     return NormalDangerFault;
-    // }
-
-    // // DC fault checking
-    // if (g_mc_data.dc_voltage > MAX_DCVOLTAGE_NORMAL) {
-    //     // TODO: error code
-    //     return NormalDangerFault;
-    // }
-    // else if (g_mc_data.dc_voltage < MIN_DCVOLTAGE_NORMAL) {
-    //     // TODO: error code
-    //     return NormalDangerFault;
-    // }
-
-    // if (g_mc_data.dc_cap_temp > MAX_DCCAP_TEMP_NORMAL) {
-    //     // TODO: error code
-    //     return NormalDangerFault;
-    // }
-    // return NoFault;
+    return has_fault;
 }
+
+State_t StateMachineThread::NormalFaultChecking() {
+    uint8_t has_fault = StateMachineThread::fault_checking_routine(
+                            WARNING, MAX_VOLTAGE_NORMAL, MIN_VOLTAGE_NORMAL, MAX_CURRENT_NORMAL,
+                            MAX_DC_VOLTAGE_NORMAL, MIN_DC_VOLTAGE_NORMAL, MAX_FET_TEMP_NORMAL);
+
+    if (has_fault) { return NormalDangerFault; }
+    else { return NoFault; }
+} 
+State_t StateMachineThread::SevereFaultChecking() {
+    uint8_t has_fault = StateMachineThread::fault_checking_routine(
+                            WARNING, MAX_VOLTAGE_SEVERE, MIN_VOLTAGE_SEVERE, MAX_CURRENT_SEVERE,
+                            MAX_DC_VOLTAGE_SEVERE, MIN_DC_VOLTAGE_SEVERE, MAX_FET_TEMP_SEVERE);
+
+    if (has_fault) { return SevereDangerFault; }
+    else { return NoFault; }
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 
