@@ -5,7 +5,7 @@
 #include "CAN_thread.hpp"
 
 osMutexId_t bus_mutex;
-osMessageQueueId_t state_change_req_queue;
+osMessageQueueId_t g_state_change_req_queue;
 RTOSThread CANThread::thread_;
 
 void send_frame(CANFrame* frame) {
@@ -29,7 +29,7 @@ void CANThread::initialize() {
     bus_mutex = osMutexNew(&bus_mutex_attrs);
     if (bus_mutex == NULL) { Error_Handler(); }
 
-    state_change_req_queue = osMessageQueueNew(10, sizeof(StateID), NULL);
+    g_state_change_req_queue = osMessageQueueNew(10, sizeof(StateID), NULL);
 }
 
 void CANThread::send_heartbeat() {
@@ -79,7 +79,10 @@ void CANThread::runCANThread(void* arg) {
             switch (rx_frame.id) {
                 case STATE_CHANGE_REQ : {
                     StateID state_change_req_id = (StateID)CANFrame_get_field(&rx_frame, STATE_ID);
-                    osMessageQueuePut(state_change_req_queue, &state_change_req_id, 0, 0);
+                    if (state_change_req_id == AUTO_PILOT) {
+                        g_mc_data.track_length = CANFrame_get_field(&rx_frame, TRACK_LENGTH);
+                    }
+                    osMessageQueuePut(g_state_change_req_queue, &state_change_req_id, 0, 0);
                     break;
                 }
                 case RING_ENCODER_DATA : {
@@ -87,17 +90,23 @@ void CANThread::runCANThread(void* arg) {
                     break;
                 }
                 case MANUAL_CONTROL_1 : {
+                    if (StateMachineThread::getState() != ManualControl) { Error_Handler(); }
+
                     // TODO: implement the below pseudocode
                     // PIDThread::set_val = UINT_TO_FLOAT(CANFrame_get_field(&rx_frame, TARGET_SPEED))
                     // SVPWMThread::fundamental_freq = UINT_TO_FLOAT(CANFrame_get_field(&rx_frame, TARGET_FREQUENCY))
                     break;
                 }
                 case MANUAL_CONTROL_2 : {
+                    if (StateMachineThread::getState() != ManualControl) { Error_Handler(); }
+
                     float target_power = UINT_TO_FLOAT(CANFrame_get_field(&rx_frame, TARGET_POWER));
                     // TODO: set the mod index in the SVPWMThread to achieve the target power...
                     break;
                 }
                 case MANUAL_CONTROL_3 : {
+                    if (StateMachineThread::getState() != ManualControl) { Error_Handler(); }
+
                     StateMachineThread::current_limit = UINT_TO_FLOAT(CANFrame_get_field(&rx_frame, SET_TEMPERATURE_LIMIT));
                     StateMachineThread::temperature_limit = UINT_TO_FLOAT(CANFrame_get_field(&rx_frame, SET_CURRENT_LIMIT));
                     break;

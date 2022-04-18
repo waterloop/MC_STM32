@@ -36,9 +36,9 @@
 #define MAX_DCCAP_TEMP_NORMAL       5
 #define MAX_DCCAP_TEMP_SEVERE       6
 
-// TRACK_INFORMATION
-#define TRACK_LENGTH                100
-#define DISTANCE_THRESHOLD          6
+// MISC
+#define DECCELERATION_DISTANCE      10 // turn off motor at 10m before the end of the track
+#define AUTOPILOT_SPEED             10 // m/s
 
 #define REPORT_FAULT(severity, fault, phase_msk) {                      \
     CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_FAULT_REPORT);   \
@@ -63,6 +63,7 @@ class StateMachineThread{
     public:
         static void initialize();
         static void setState(State_t state);
+        static State_t getState();
 
     public:
         // these need to be accessable to the CANThread for manual control mode
@@ -75,8 +76,8 @@ class StateMachineThread{
         static uint8_t enable_fault_check;
 
     private:
-        static void ack_state_change();
-        static void nack_state_change();
+        static void ack_state_change(StateID requested_state);
+        static void nack_state_change(StateID requested_state);
 
     private:
         static uint8_t fault_checking_routine(MCSeverityCode severity);

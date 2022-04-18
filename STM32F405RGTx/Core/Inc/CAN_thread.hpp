@@ -4,7 +4,7 @@
 
 #define BUS_TEST_REQ_TIMEOUT        10000
 
-extern osMessageQueueId_t state_change_req_queue;
+extern osMessageQueueId_t g_state_change_req_queue;
 extern osMutexId_t bus_mutex;
 
 // thread safe wrapper for CANBus_put_frame

@@ -10,26 +10,31 @@ class MC {
         float pVa;
         float pVb;
         float pVc;
-        
-        // DC battery voltage
-        float dc_voltage;
-        
+
         // Phase currents
         float pIa;
         float pIb;
         float pIc;
-        
+ 
+        // DC battery voltage
+        float dc_voltage;
+       
         // MOSFET and DC Link Capacitor temperatures
         float fet_temps[3];
-        // Note: dc_cap_temp dne for Powerboard rev 2 but will for the next rev
-        float dc_cap_temp;
         
         // Current position, speed, and acceleration
         float curr_pos;
-        float ring_encoder_reported_speed;
-
         float curr_speed;
         float curr_accel;
+
+        float target_speed;
+        float track_length;
+
+        float ring_encoder_reported_speed;
+
+    private:
+        // Note: dc_cap_temp dne for Powerboard rev 2 but will for the next rev
+        float dc_cap_temp;
 };
 
 

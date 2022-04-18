@@ -83,7 +83,7 @@ void MeasurementsThread::processData() {
                g_mc_data.fet_temps[2] =  ADC_TO_TEMP_LUT[val];
                break;
             case 10:
-               g_mc_data.dc_cap_temp =  ADC_TO_TEMP_LUT[val];
+               // g_mc_data.dc_cap_temp =  ADC_TO_TEMP_LUT[val];
                break;
 
         }
@@ -106,6 +106,8 @@ void MeasurementsThread::startADCandDMA() {
 
 void MeasurementsThread::runMeasurements(void* args) {
     startADCandDMA();
+    
+
 
     while (1) {
         // Process the acceleration data here...
