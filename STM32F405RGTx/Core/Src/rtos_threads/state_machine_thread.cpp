@@ -31,10 +31,12 @@ void StateMachineThread::runStateMachine(void* arg) {
         .B = 0,
         .blink = 0
     };
+    StateMachineThread::state = Initialize;
 
     while (1) {
-        switch (state) {
+        switch (StateMachineThread::state) {
             case Initialize:
+                StateMachineThread::state = Idle;
                 // state = InitializeEvent();
                 break;
 
@@ -55,7 +57,7 @@ void StateMachineThread::runStateMachine(void* arg) {
                 led.blink = 0;
                 LEDThread::setLED(led);
 
-                // state = IdleEvent();
+                StateMachineThread::state = IdleEvent();
                 break;
 
             case AutoPilot:

@@ -31,6 +31,7 @@ void LEDThread::setLED(LEDStatus status) {
 }
 
 void LEDThread::runLEDThread(void* args) {
+    LEDThread::on = 1;
     while (1) {
         set_LED_intensity(RED, LEDThread::R*LEDThread::on);
         set_LED_intensity(GREEN, LEDThread::G*LEDThread::on);

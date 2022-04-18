@@ -37,7 +37,7 @@ extern int __io_getchar(void) __attribute__((weak));
 
 // redirect stdin and stdout to UART1
 int __io_putchar(int ch) {
-    HAL_UART_Transmit(&huart4, &ch, 1, 0xffff);
+    HAL_UART_Transmit(&huart4, (uint8_t*)&ch, 1, 0xffff);
 	return 0;
 }
 int __io_getchar() {
