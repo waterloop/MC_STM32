@@ -4,14 +4,14 @@
 #include "threads.hpp"
 #include "CAN_thread.hpp"
 
-osMutexId_t bus_mutex;
+osMutexId_t g_bus_mutex;
 osMessageQueueId_t g_state_change_req_queue;
 RTOSThread CANThread::thread_;
 
 void send_frame(CANFrame* frame) {
-    if (osMutexAcquire(bus_mutex, 0U) != osOK) { Error_Handler(); }
+    if (osMutexAcquire(g_bus_mutex, 0U) != osOK) { Error_Handler(); }
     CANBus_put_frame(frame);
-    if (osMutexRelease(bus_mutex) != osOK) { Error_Handler(); }
+    if (osMutexRelease(g_bus_mutex) != osOK) { Error_Handler(); }
 }
 
 void CANThread::initialize() {
@@ -22,12 +22,12 @@ void CANThread::initialize() {
         CANThread::runCANThread
     );
 
-    osMutexAttr_t bus_mutex_attrs = {
+    osMutexAttr_t g_bus_mutex_attrs = {
         .name = "bus_mutex",
         .attr_bits = osMutexPrioInherit
     };
-    bus_mutex = osMutexNew(&bus_mutex_attrs);
-    if (bus_mutex == NULL) { Error_Handler(); }
+    g_bus_mutex = osMutexNew(&g_bus_mutex_attrs);
+    if (g_bus_mutex == NULL) { Error_Handler(); }
 
     g_state_change_req_queue = osMessageQueueNew(10, sizeof(StateID), NULL);
 }
