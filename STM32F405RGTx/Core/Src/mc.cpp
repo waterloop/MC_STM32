@@ -33,6 +33,7 @@ int mc_entry() {
     MeasurementsThread::initialize();
     StateMachineThread::initialize();
     LEDThread::initialize();
+    CANThread::initialize();
 
     printf("starting rtos scheduler...\r\n");
     osKernelStart();
