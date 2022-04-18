@@ -20,12 +20,14 @@ class MC {
         float pIc;
         
         // MOSFET and DC Link Capacitor temperatures
-        float fet_temps[6];
+        float fet_temps[3];
         // Note: dc_cap_temp dne for Powerboard rev 2 but will for the next rev
         float dc_cap_temp;
         
         // Current position, speed, and acceleration
         float curr_pos;
+        float ring_encoder_reported_speed;
+
         float curr_speed;
         float curr_accel;
 };

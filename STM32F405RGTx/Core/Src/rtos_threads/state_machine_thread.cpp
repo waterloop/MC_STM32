@@ -181,34 +181,56 @@ uint8_t StateMachineThread::check_fet_overtemp(float threshold, uint8_t* phase_m
     }
     return has_overtemp;
 }
-uint8_t StateMachineThread::fault_checking_routine(
-    MCSeverityCode severity, float max_phase_volt, float min_phase_volt, float max_curr,
-    float max_cap_volt,   float min_cap_volt,   float max_fet_temp
-) {
+uint8_t StateMachineThread::fault_checking_routine(MCSeverityCode severity) {
     uint8_t phase_msk = 0;
     uint8_t has_fault = 0;
 
-    if (check_phase_overvolt(MAX_VOLTAGE_NORMAL, &phase_msk)) {
+    float max_phase_volt, min_phase_volt, max_curr, max_cap_volt, min_cap_volt, max_fet_temp;
+    switch (severity) {
+        case WARNING : {
+            max_phase_volt = MAX_VOLTAGE_NORMAL;
+            min_phase_volt = MIN_VOLTAGE_NORMAL;
+            max_curr = MAX_CURRENT_NORMAL;
+            max_cap_volt = MAX_DC_VOLTAGE_NORMAL;
+            min_cap_volt = MIN_DC_VOLTAGE_NORMAL;
+            max_fet_temp = MAX_FET_TEMP_NORMAL;
+            break;
+        }
+        case SEVERE : {
+            max_phase_volt = MAX_VOLTAGE_SEVERE;
+            min_phase_volt = MIN_VOLTAGE_SEVERE;
+            max_curr = MAX_CURRENT_SEVERE;
+            max_cap_volt = MAX_DC_VOLTAGE_SEVERE;
+            min_cap_volt = MIN_DC_VOLTAGE_SEVERE;
+            max_fet_temp = MAX_FET_TEMP_SEVERE;
+            break;
+        }
+        default : {
+            Error_Handler();
+        }
+    }
+
+    if (check_phase_overvolt(max_phase_volt, &phase_msk)) {
         REPORT_FAULT(severity, PHASE_OVERVOLTAGE, phase_msk)
         has_fault |= 1;
     }
 
-    if (check_phase_undervolt(MIN_VOLTAGE_NORMAL, &phase_msk)) {
+    if (check_phase_undervolt(min_phase_volt, &phase_msk)) {
         REPORT_FAULT(severity, PHASE_UNDERVOLTAGE, phase_msk);
         has_fault |= 1;
     }
 
-    if (check_phase_overcurr(MAX_CURRENT_NORMAL, &phase_msk)) {
+    if (check_phase_overcurr(max_curr, &phase_msk)) {
         REPORT_FAULT(severity, PHASE_OVERCURRENT, phase_msk);
         has_fault |= 1;
     }
 
-    if (check_cap_overvolt(MAX_DC_VOLTAGE_NORMAL)) {
+    if (check_cap_overvolt(max_cap_volt)) {
         REPORT_FAULT(severity, DC_CAP_OVERVOLTAGE, 0)
         has_fault |= 1;
     }
 
-    if (check_cap_undervolt(MIN_DC_VOLTAGE_NORMAL)) {
+    if (check_cap_undervolt(min_cap_volt)) {
         REPORT_FAULT(severity, DC_CAP_UNDERVOLTAGE, 0)
         has_fault |= 1;
     }
@@ -218,7 +240,7 @@ uint8_t StateMachineThread::fault_checking_routine(
     //     return NormalDangerFault;
     // }
 
-    if (check_fet_overtemp(MAX_FET_TEMP_NORMAL, &phase_msk)) {
+    if (check_fet_overtemp(max_fet_temp, &phase_msk)) {
         REPORT_FAULT(severity, PHASE_OVERTEMPERATURE, phase_msk)
         has_fault |= 1;
     }
@@ -227,17 +249,13 @@ uint8_t StateMachineThread::fault_checking_routine(
 }
 
 State_t StateMachineThread::NormalFaultChecking() {
-    uint8_t has_fault = StateMachineThread::fault_checking_routine(
-                            WARNING, MAX_VOLTAGE_NORMAL, MIN_VOLTAGE_NORMAL, MAX_CURRENT_NORMAL,
-                            MAX_DC_VOLTAGE_NORMAL, MIN_DC_VOLTAGE_NORMAL, MAX_FET_TEMP_NORMAL);
+    uint8_t has_fault = StateMachineThread::fault_checking_routine(WARNING);
 
     if (has_fault) { return NormalDangerFault; }
     else { return NoFault; }
 } 
 State_t StateMachineThread::SevereFaultChecking() {
-    uint8_t has_fault = StateMachineThread::fault_checking_routine(
-                            WARNING, MAX_VOLTAGE_SEVERE, MIN_VOLTAGE_SEVERE, MAX_CURRENT_SEVERE,
-                            MAX_DC_VOLTAGE_SEVERE, MIN_DC_VOLTAGE_SEVERE, MAX_FET_TEMP_SEVERE);
+    uint8_t has_fault = StateMachineThread::fault_checking_routine(SEVERE);
 
     if (has_fault) { return SevereDangerFault; }
     else { return NoFault; }

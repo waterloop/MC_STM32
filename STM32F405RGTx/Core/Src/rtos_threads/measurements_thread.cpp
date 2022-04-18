@@ -25,14 +25,13 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
     osThreadFlagsSet(MeasurementsThread::getThreadId(), 0x00000001U);        // set flag to signal that ADC conversion has completed
 }
 
-void MeasurementsThread::initialize(){
+void MeasurementsThread::initialize() {
     thread = RTOSThread(
         "measurements_thread",
         1024*5,
         osPriorityAboveNormal,
         runMeasurements
     );
-
 }
 
 

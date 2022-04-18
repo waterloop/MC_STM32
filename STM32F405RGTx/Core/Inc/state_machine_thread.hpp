@@ -64,6 +64,11 @@ class StateMachineThread{
         static void initialize();
         static void setState(State_t state);
 
+    public:
+        // these need to be accessable to the CANThread for manual control mode
+        static float current_limit;
+        static float temperature_limit;
+
     private:
         static RTOSThread thread;
         static State_t state;
@@ -74,9 +79,7 @@ class StateMachineThread{
         static void nack_state_change();
 
     private:
-        static uint8_t fault_checking_routine(
-            MCSeverityCode severity, float max_phase_volt, float min_phase_volt, float max_curr,
-            float max_cap_volt,   float min_cap_volt,   float max_fet_temp);
+        static uint8_t fault_checking_routine(MCSeverityCode severity);
 
         static State_t NormalFaultChecking(void);
         static State_t SevereFaultChecking(void);
