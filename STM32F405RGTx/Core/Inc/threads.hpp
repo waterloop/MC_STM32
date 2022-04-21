@@ -4,7 +4,7 @@
 #include "measurements_thread.hpp"
 #include "state_machine_thread.hpp"
 #include "CAN_thread.hpp"
-#include "led_thread.hpp"
+#include "LED_thread.hpp"
 
 // Thread Periodicities (ms)
 #define MEASUREMENTS_THREAD_PERIODICITY     10
