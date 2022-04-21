@@ -23,7 +23,7 @@ void StateMachineThread::initialize() {
     StateMachineThread::thread = RTOSThread(
         "state_machine_thread",
         1024*5,
-        osPriorityNormal,
+        STATE_MACHINE_THREAD_PRIORITY,
         runStateMachine
     );
 }

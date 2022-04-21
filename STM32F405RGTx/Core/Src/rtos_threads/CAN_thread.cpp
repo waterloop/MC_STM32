@@ -19,7 +19,7 @@ void CANThread::initialize() {
     CANThread::thread_ = RTOSThread(
         "CAN_thread",
         1024,
-        osPriorityBelowNormal,
+        CAN_THREAD_PRIORITY,
         CANThread::runCANThread
     );
 

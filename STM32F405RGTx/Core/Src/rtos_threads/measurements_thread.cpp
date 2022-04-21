@@ -29,7 +29,7 @@ void MeasurementsThread::initialize() {
     thread = RTOSThread(
         "measurements_thread",
         1024*5,
-        osPriorityAboveNormal,
+        MEASUREMENTS_THREAD_PRIORITY,
         runMeasurements
     );
 }

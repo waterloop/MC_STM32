@@ -15,7 +15,7 @@ void LEDThread::initialize() {
     LEDThread::thread_ = RTOSThread(
         "debug_led_thread",
         500,
-        osPriorityIdle,
+        LED_THREAD_PRIORITY,
         LEDThread::runLEDThread
     );
 }
