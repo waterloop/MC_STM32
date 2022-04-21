@@ -40,12 +40,12 @@
 #define DECCELERATION_DISTANCE      10 // turn off motor at 10m before the end of the track
 #define AUTOPILOT_SPEED             10 // m/s
 
-#define REPORT_FAULT(severity, fault, phase_msk) {                      \
-    CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_FAULT_REPORT);   \
-    CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_SEVERITY_CODE, severity);       \
-    CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_ERROR_CODE, fault);             \
-    CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_PHASE_MASK, phase_msk);         \
-    if (CANBus_put_frame(&tx_frame) != HAL_OK) { Error_Handler(); }     \
+#define REPORT_FAULT(severity, fault, phase_msk) {                                  \
+    CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_FAULT_REPORT);               \
+    CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_SEVERITY_CODE, severity);        \
+    CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_ERROR_CODE, fault);              \
+    CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_PHASE_MASK, phase_msk);          \
+    if (CANBus_put_frame(&tx_frame) != HAL_OK) { Error_Handler(); }                 \
 }
 
 typedef enum {

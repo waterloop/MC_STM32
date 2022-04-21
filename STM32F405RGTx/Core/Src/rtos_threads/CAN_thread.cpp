@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "main.h"
 #include "can.h"
 #include "mc.hpp"
@@ -30,6 +31,12 @@ void CANThread::initialize() {
     if (g_bus_mutex == NULL) { Error_Handler(); }
 
     g_state_change_req_queue = osMessageQueueNew(10, sizeof(StateID), NULL);
+
+    printf("initializing CAN peripheral...\r\n");
+    if (CANBus_init(&hcan1, &htim7) != HAL_OK) { Error_Handler(); }
+    if (CANBus_subscribe(STATE_CHANGE_REQ) != HAL_OK) { Error_Handler(); }
+    if (CANBus_subscribe_mask(BUS_TEST_REQ_BASE, BUS_TEST_MSK) != HAL_OK) { Error_Handler(); }
+    if (CANBus_subscribe_mask(BUS_TEST_RESP_BASE, BUS_TEST_MSK) != HAL_OK) { Error_Handler(); }
 }
 
 void CANThread::send_heartbeat() {
@@ -70,7 +77,9 @@ void CANThread::runCANThread(void* arg) {
     // wait for a response...
     uint32_t start_time = HAL_GetTick();
     while (!Queue_empty(&RX_QUEUE)) {
-        if ((HAL_GetTick() - start_time) > BUS_TEST_REQ_TIMEOUT) { Error_Handler(); }
+        if ((HAL_GetTick() - start_time) > BUS_TEST_REQ_TIMEOUT) {
+            StateMachineThread::setState(NormalDangerFault);
+        }
     }
 
     while (1) {
@@ -115,6 +124,8 @@ void CANThread::runCANThread(void* arg) {
         }
 
         CANThread::send_heartbeat();
+        if (RELAY_HEARTBEAT_ERROR_FLAG) { StateMachineThread::setState(NormalDangerFault); }
+
         osDelay(CAN_THREAD_PERIODICITY);
     }
 }

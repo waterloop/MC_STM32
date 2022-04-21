@@ -171,7 +171,7 @@ State_t StateMachineThread::AutoPilotEvent() {
         if ( (requested_state == EMERGENCY_BRAKE) || (requested_state == SYSTEM_FAILURE) ) {
             return SevereDangerFault;
         }
-        if ( (requested_state == BRAKING) || (distance_to_end <= DECCELERATION_DISTANCE) ) {
+        else if ( (requested_state == BRAKING) || (distance_to_end <= DECCELERATION_DISTANCE) ) {
             return Idle;
         }
     }
@@ -193,7 +193,7 @@ State_t StateMachineThread::ManualControlEvent() {
         if ( (requested_state == EMERGENCY_BRAKE) || (requested_state == SYSTEM_FAILURE) ) {
             return SevereDangerFault;
         }
-        if (requested_state == BRAKING) {
+        else if (requested_state == BRAKING) {
             return Idle;
         }
     }
@@ -235,15 +235,15 @@ State_t StateMachineThread::SevereDangerFaultEvent() {
 uint8_t StateMachineThread::check_phase_overvolt(float threshold, uint8_t* phase_msk) {
     uint8_t has_overvolt = 0;
     if (g_mc_data.pVa > threshold) {
-        has_overvolt |= 1;
+        has_overvolt = 1;
         *phase_msk |= PHASE_A_FAULT;
     }
     if (g_mc_data.pVb > threshold) {
-        has_overvolt |= 1;
+        has_overvolt = 1;
         *phase_msk |= PHASE_B_FAULT;
     }
     if (g_mc_data.pVc > threshold) {
-        has_overvolt |= 1;
+        has_overvolt = 1;
         *phase_msk |= PHASE_C_FAULT;
     }
     return has_overvolt;
@@ -251,15 +251,15 @@ uint8_t StateMachineThread::check_phase_overvolt(float threshold, uint8_t* phase
 uint8_t StateMachineThread::check_phase_undervolt(float threshold, uint8_t* phase_msk) {
     uint8_t has_undervolt = 0;
     if (g_mc_data.pVa < threshold) {
-        has_undervolt |= 1;
+        has_undervolt = 1;
         *phase_msk |= PHASE_A_FAULT;
     }
     if (g_mc_data.pVb < threshold) {
-        has_undervolt |= 1;
+        has_undervolt = 1;
         *phase_msk |= PHASE_B_FAULT;
     }
     if (g_mc_data.pVc < threshold) {
-        has_undervolt |= 1;
+        has_undervolt = 1;
         *phase_msk |= PHASE_C_FAULT;
     }
     return has_undervolt;
@@ -267,41 +267,35 @@ uint8_t StateMachineThread::check_phase_undervolt(float threshold, uint8_t* phas
 uint8_t StateMachineThread::check_phase_overcurr(float threshold, uint8_t* phase_msk) {
     uint8_t has_overcurr = 0;
     if (g_mc_data.pIa > threshold) {
-        has_overcurr |= 1;
-        *phase_msk |= 1;
+        has_overcurr = 1;
+        *phase_msk |= PHASE_A_FAULT;
     }
     if (g_mc_data.pIb > threshold) {
-        has_overcurr |= 1;
-        *phase_msk |= 1;
+        has_overcurr = 1;
+        *phase_msk |= PHASE_B_FAULT;
     }
     if (g_mc_data.pIc > threshold) {
-        has_overcurr |= 1;
-        *phase_msk |= 1;
+        has_overcurr = 1;
+        *phase_msk |= PHASE_C_FAULT;
     }
     return has_overcurr;
 }
-uint8_t StateMachineThread::check_cap_overvolt(float threshold) {
-    uint8_t has_overvolt = 0;
-    // PUT LOGIC HERE, IDK THO aASLDKFJASDFJKA;SLDFJA;SKLD
-    return has_overvolt;
-}
-uint8_t StateMachineThread::check_cap_undervolt(float threshold) {
-    uint8_t has_undervolt = 0;
-    // PUT LOGIC HERE, IDK THO ASDFSDFLKAJSDFLKAJSDLFKJALS;DFJ
-    return has_undervolt;
-}
+
+uint8_t StateMachineThread::check_cap_overvolt(float threshold) { return (g_mc_data.dc_voltage > threshold); }
+uint8_t StateMachineThread::check_cap_undervolt(float threshold) { return (g_mc_data.dc_voltage < threshold); }
+
 uint8_t StateMachineThread::check_fet_overtemp(float threshold, uint8_t* phase_msk) {
     uint8_t has_overtemp = 0;
     if ( (g_mc_data.fet_temps[0] > threshold) || (g_mc_data.fet_temps[1] > threshold) ) {
-        has_overtemp |= 1;
+        has_overtemp = 1;
         *phase_msk |= PHASE_A_FAULT;
     }
     if ( (g_mc_data.fet_temps[2] > threshold) || (g_mc_data.fet_temps[3] > threshold) ) {
-        has_overtemp |= 1;
+        has_overtemp = 1;
         *phase_msk |= PHASE_B_FAULT;
     }
     if ( (g_mc_data.fet_temps[4] > threshold) || (g_mc_data.fet_temps[5] > threshold) ) {
-        has_overtemp |= 1;
+        has_overtemp = 1;
         *phase_msk |= PHASE_C_FAULT;
     }
     return has_overtemp;
