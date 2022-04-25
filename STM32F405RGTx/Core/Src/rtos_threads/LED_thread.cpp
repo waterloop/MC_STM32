@@ -18,6 +18,11 @@ void LEDThread::initialize() {
         LED_THREAD_PRIORITY,
         LEDThread::runLEDThread
     );
+    LEDThread::R = 0;
+    LEDThread::G = 0;
+    LEDThread::B = 0;
+    LEDThread::blink = false;
+    LEDThread::on = true;
 }
 
 void LEDThread::setLED(LEDStatus status) {
@@ -42,8 +47,4 @@ void LEDThread::runLEDThread(void* args) {
         osDelay(LED_THREAD_PERIODICITY);
     }
 }
-
-//    GPIOB->MODER &= ~(0b11 << (3*2));
-//    GPIOB->MODER |= (0b01 << (3*2));
-
 

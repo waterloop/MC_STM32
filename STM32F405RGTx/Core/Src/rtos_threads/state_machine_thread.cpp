@@ -47,8 +47,6 @@ void StateMachineThread::runStateMachine(void* arg) {
                 led.G = 50.0;
                 led.B = 0.0;
                 led.blink = 0;
-                LEDThread::setLED(led);
-
                 StateMachineThread::state = IdleEvent();
                 break;
             }
@@ -57,8 +55,6 @@ void StateMachineThread::runStateMachine(void* arg) {
                 led.G = 50.0;
                 led.B = 0.0;
                 led.blink = 0;
-                LEDThread::setLED(led);
-
                 StateMachineThread::state = AutoPilotEvent();
                 break;
             }
@@ -67,8 +63,6 @@ void StateMachineThread::runStateMachine(void* arg) {
                 led.G = 0.0;
                 led.B = 50.0;
                 led.blink = 0;
-                LEDThread::setLED(led);
-
                 StateMachineThread::state = ManualControlEvent();
                 break;
             }
@@ -77,8 +71,6 @@ void StateMachineThread::runStateMachine(void* arg) {
                 led.G = 0.0;
                 led.B = 0.0;
                 led.blink = 0;
-                LEDThread::setLED(led);
-
                 StateMachineThread::state = NormalDangerFaultEvent();
                 break;
             }
@@ -87,8 +79,6 @@ void StateMachineThread::runStateMachine(void* arg) {
                 led.G = 0.0;
                 led.B = 0.0;
                 led.blink = 1;
-                LEDThread::setLED(led);
-
                 StateMachineThread::state = SevereDangerFaultEvent();
                 break;
             }
@@ -97,6 +87,7 @@ void StateMachineThread::runStateMachine(void* arg) {
                 break;    
             }
         }
+        LEDThread::setLED(led);
 
         if (enable_fault_check) {
             State_t severe_check = StateMachineThread::SevereFaultChecking();
