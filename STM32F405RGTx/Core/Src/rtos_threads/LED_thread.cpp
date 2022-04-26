@@ -1,7 +1,7 @@
 #include "main.h"
 #include "threads.hpp"
 #include "timer_utils.h"
-#include "led_thread.hpp"
+#include "LED_thread.hpp"
 
 RTOSThread LEDThread::thread_;
 float LEDThread::R;
@@ -15,9 +15,14 @@ void LEDThread::initialize() {
     LEDThread::thread_ = RTOSThread(
         "debug_led_thread",
         500,
-        osPriorityIdle,
+        LED_THREAD_PRIORITY,
         LEDThread::runLEDThread
     );
+    LEDThread::R = 0;
+    LEDThread::G = 0;
+    LEDThread::B = 0;
+    LEDThread::blink = false;
+    LEDThread::on = true;
 }
 
 void LEDThread::setLED(LEDStatus status) {
@@ -31,6 +36,7 @@ void LEDThread::setLED(LEDStatus status) {
 }
 
 void LEDThread::runLEDThread(void* args) {
+    LEDThread::on = 1;
     while (1) {
         set_LED_intensity(RED, LEDThread::R*LEDThread::on);
         set_LED_intensity(GREEN, LEDThread::G*LEDThread::on);
@@ -41,8 +47,4 @@ void LEDThread::runLEDThread(void* args) {
         osDelay(LED_THREAD_PERIODICITY);
     }
 }
-
-//    GPIOB->MODER &= ~(0b11 << (3*2));
-//    GPIOB->MODER |= (0b01 << (3*2));
-
 

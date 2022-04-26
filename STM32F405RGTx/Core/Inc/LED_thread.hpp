@@ -6,7 +6,7 @@ typedef struct {
     float R;
     float G;
     float B;
-    float blink;
+    uint8_t blink;
 } LEDStatus;
 
 class LEDThread {

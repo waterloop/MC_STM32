@@ -8,8 +8,8 @@ extern "C" {
 #endif
 
 typedef enum {
-    BLUE    = 3,
-    GREEN   = 2,
+    GREEN   = 3,
+    BLUE    = 2,
     RED     = 1
 } LED_COLOR;
 

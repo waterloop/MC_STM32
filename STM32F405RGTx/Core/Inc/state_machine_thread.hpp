@@ -1,16 +1,15 @@
-/* state_machine.h
+/* state_machine.hpp
  *
  *    Created on: Jul. 11, 2021
  *            Author: Kanishk Kashyap
 */
 #pragma once
 
+#include <stdint.h>
 #include "can.h"
 #include "cmsis_os.h"
 #include "can.h"
 #include "util.hpp"
-#include <cstdint>
-
 
 // Constants - These numbers are arbritrary should be changed after testing
 // Mosfet Array Length
@@ -18,13 +17,12 @@
 #define NUM_PHASE_OUTPUTS           3
 
 // Severe Fault
-#define MAX_FET_TEMP_SEVERE         70.0F
-#define MAX_DCVOLTAGE_SEVERE        4.0F
-#define MIN_DCVOLTAGE_SEVERE        1.8F
 #define MAX_VOLTAGE_SEVERE          4.0F
 #define MIN_VOLTAGE_SEVERE          1.0F
-#define MAX_TEMP_SEVERE             70.0F
 #define MAX_CURRENT_SEVERE          50.0F
+#define MAX_DC_VOLTAGE_SEVERE       4.0F
+#define MIN_DC_VOLTAGE_SEVERE       1.8F
+#define MAX_FET_TEMP_SEVERE         70.0F
 
 // Normal Fault
 #define MAX_VOLTAGE_NORMAL          3.8F
@@ -38,14 +36,19 @@
 #define MAX_DCCAP_TEMP_NORMAL       5
 #define MAX_DCCAP_TEMP_SEVERE       6
 
-// TRACK_INFORMATION
-#define TRACK_LENGTH                100
-#define DISTANCE_THRESHOLD          6
+// MISC
+#define DECCELERATION_DISTANCE      10 // turn off motor at 10m before the end of the track
+#define AUTOPILOT_SPEED             10 // m/s
 
+#define REPORT_FAULT(severity, fault, phase_msk) {                                  \
+    CANFrame tx_frame = CANFrame_init(MOTOR_CONTROLLER_FAULT_REPORT);               \
+    CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_SEVERITY_CODE, severity);        \
+    CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_ERROR_CODE, fault);              \
+    CANFrame_set_field(&tx_frame, MOTOR_CONTROLLER_PHASE_MASK, phase_msk);          \
+    if (CANBus_put_frame(&tx_frame) != HAL_OK) { Error_Handler(); }                 \
+}
 
 typedef enum {
-    Initialize,
-    InitializeFault,
     Idle,
     Brake,
     AutoPilot,
@@ -60,27 +63,25 @@ class StateMachineThread{
     public:
         static void initialize();
         static void setState(State_t state);
+        static State_t getState();
+
+    public:
+        // these need to be accessable to the CANThread for manual control mode
+        static float current_limit;
+        static float temperature_limit;
 
     private:
         static RTOSThread thread;
         static State_t state;
+        static uint8_t enable_fault_check;
 
     private:
-        static void send_CAN_heartbeat(void);
-
-        static void report_phase_overvolt(uint8_t phase_msk);
-        static void report_phase_undervolt(uint8_t phase_msk);
-        static void report_phase_overcurrent(uint8_t phase_msk);
-        static void report_phase_overtemp(uint8_t phase_msk);
-        static void report_cap_overvolt();
-        static void report_cap_undervolt();
-        // static void report_motor_stall();
-        static void report_fet_overtemp(uint8_t phase_msk);
-
-        static void ack_state_change();
-        static void nack_state_change();
+        static void ack_state_change(StateID requested_state);
+        static void nack_state_change(StateID requested_state);
 
     private:
+        static uint8_t fault_checking_routine(MCSeverityCode severity);
+
         static State_t NormalFaultChecking(void);
         static State_t SevereFaultChecking(void);
 
