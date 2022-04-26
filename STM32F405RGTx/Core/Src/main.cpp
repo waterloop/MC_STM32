@@ -24,6 +24,7 @@
 /* USER CODE BEGIN Includes */
 #include "mc.hpp"
 #include "can.h"
+#include "svpwm_thread.hpp"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -137,6 +138,17 @@ int main(void)
   MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
   mc_entry();
+
+    // Start PWM timers
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+  HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
+  HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_2);
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
+  HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_3);
+
+  //Initialize the interrupt timer
+  HAL_TIM_Base_Start_IT(&htim9);
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -826,7 +838,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
-  WLoopCAN_timer_isr(htim);
+  // WLoopCAN_timer_isr(htim);
+
+  if (htim->Instance == TIM9) {
+    osThreadFlagsSet(SVPWMThread::getThreadId(),  0x00000001U);        // set flag to signal that ADC conversion has completed
+  }
   /* USER CODE END Callback 1 */
 }
 
