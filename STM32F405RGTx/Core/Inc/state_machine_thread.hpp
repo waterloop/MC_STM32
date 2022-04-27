@@ -37,7 +37,7 @@
 #define MAX_DCCAP_TEMP_SEVERE       6
 
 // MISC
-#define DECCELERATION_DISTANCE      10 // turn off motor at 10m before the end of the track
+#define DECELERATION_DISTANCE       10 // turn off motor at 10m before the end of the track
 #define AUTOPILOT_SPEED             10 // m/s
 
 #define REPORT_FAULT(severity, fault, phase_msk) {                                  \

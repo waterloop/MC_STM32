@@ -162,7 +162,7 @@ State_t StateMachineThread::AutoPilotEvent() {
         if ( (requested_state == EMERGENCY_BRAKE) || (requested_state == SYSTEM_FAILURE) ) {
             return SevereDangerFault;
         }
-        else if ( (requested_state == BRAKING) || (distance_to_end <= DECCELERATION_DISTANCE) ) {
+        else if ( (requested_state == BRAKING) || (distance_to_end <= DECELERATION_DISTANCE) ) {
             return Idle;
         }
     }
