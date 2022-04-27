@@ -43,6 +43,7 @@ extern I2C_HandleTypeDef hi2c1;
 extern SPI_HandleTypeDef hspi1;
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim3;
+extern TIM_HandleTypeDef htim7;
 extern TIM_HandleTypeDef htim9;
 extern UART_HandleTypeDef huart4;
 /* USER CODE END ET */

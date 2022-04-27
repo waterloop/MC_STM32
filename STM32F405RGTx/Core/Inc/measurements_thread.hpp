@@ -5,8 +5,6 @@
 #define ADC_NUM_CONVERSIONS         11U
 #define ADC_DECIMATION_COEFF        256U
 
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc);
-
 class MeasurementsThread {
     public:
         static void initialize();

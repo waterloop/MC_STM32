@@ -25,14 +25,13 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
     osThreadFlagsSet(MeasurementsThread::getThreadId(), 0x00000001U);        // set flag to signal that ADC conversion has completed
 }
 
-void MeasurementsThread::initialize(){
+void MeasurementsThread::initialize() {
     thread = RTOSThread(
         "measurements_thread",
         1024*5,
-        osPriorityAboveNormal,
+        MEASUREMENTS_THREAD_PRIORITY,
         runMeasurements
     );
-
 }
 
 
@@ -84,7 +83,7 @@ void MeasurementsThread::processData() {
                g_mc_data.fet_temps[2] =  ADC_TO_TEMP_LUT[val];
                break;
             case 10:
-               g_mc_data.dc_cap_temp =  ADC_TO_TEMP_LUT[val];
+               // g_mc_data.dc_cap_temp =  ADC_TO_TEMP_LUT[val];
                break;
 
         }
@@ -107,6 +106,8 @@ void MeasurementsThread::startADCandDMA() {
 
 void MeasurementsThread::runMeasurements(void* args) {
     startADCandDMA();
+    
+
 
     while (1) {
         // Process the acceleration data here...
@@ -114,6 +115,8 @@ void MeasurementsThread::runMeasurements(void* args) {
         osThreadFlagsWait(0x00000001U, osFlagsWaitAll, 0U);
         processData();
         startADCandDMA();
+
+        osDelay(MEASUREMENTS_THREAD_PERIODICITY);
     }
 }
 
