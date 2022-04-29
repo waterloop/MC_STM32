@@ -123,8 +123,8 @@ void CANThread::runCANThread(void* arg) {
             }
         }
 
-        CANThread::send_heartbeat();
-        if (RELAY_HEARTBEAT_ERROR_FLAG) { StateMachineThread::setState(NormalDangerFault); }
+        // CANThread::send_heartbeat();
+        // if (RELAY_HEARTBEAT_ERROR_FLAG) { StateMachineThread::setState(NormalDangerFault); }
 
         osDelay(CAN_THREAD_PERIODICITY);
     }
