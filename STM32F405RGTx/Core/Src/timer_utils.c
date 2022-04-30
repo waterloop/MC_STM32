@@ -5,13 +5,13 @@
 void set_LED_intensity(LED_COLOR color, float intensity) {
     uint32_t ccr_val = (uint32_t)( ((100 - intensity)*htim3.Instance->ARR)/100 );
     switch (color) {
-        case 1:
+        case RED:
             htim3.Instance->CCR1 = ccr_val;
             break;
-        case 2:
+        case BLUE:
             htim3.Instance->CCR2 = ccr_val;
             break;
-        case 3:
+        case GREEN:
             htim3.Instance->CCR3 = ccr_val;
             break;
     }

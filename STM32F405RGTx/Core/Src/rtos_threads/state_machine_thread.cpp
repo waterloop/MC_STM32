@@ -51,8 +51,8 @@ void StateMachineThread::runStateMachine(void* arg) {
                 break;
             }
             case AutoPilot : {
-                led.R = 50.0;
-                led.G = 50.0;
+                led.R = 75.0;
+                led.G = 35.0;
                 led.B = 0.0;
                 led.blink = 0;
                 StateMachineThread::state = AutoPilotEvent();
@@ -61,13 +61,13 @@ void StateMachineThread::runStateMachine(void* arg) {
             case ManualControl : {
                 led.R = 0.0;
                 led.G = 0.0;
-                led.B = 50.0;
+                led.B = 90.0;
                 led.blink = 0;
                 StateMachineThread::state = ManualControlEvent();
                 break;
             }
             case NormalDangerFault : {
-                led.R = 50.0;
+                led.R = 90.0;
                 led.G = 0.0;
                 led.B = 0.0;
                 led.blink = 0;
@@ -75,7 +75,7 @@ void StateMachineThread::runStateMachine(void* arg) {
                 break;
             }
             case SevereDangerFault : {
-                led.R = 50.0;
+                led.R = 90.0;
                 led.G = 0.0;
                 led.B = 0.0;
                 led.blink = 1;
@@ -124,7 +124,7 @@ State_t StateMachineThread::IdleEvent() {
 
     StateID requested_state;
     osStatus_t status = osMessageQueueGet(g_state_change_req_queue, &requested_state, NULL, 0);
-    if (status == osErrorTimeout) {
+    if (status == osErrorResource) {
         return Idle;
     }
     else if (status == osOK) {
@@ -154,7 +154,7 @@ State_t StateMachineThread::AutoPilotEvent() {
 
     StateID requested_state;
     osStatus status = osMessageQueueGet(g_state_change_req_queue, &requested_state, NULL, 0);
-    if (status == osErrorTimeout) {
+    if (status == osErrorResource) {
         return AutoPilot;
     }
     else if (status == osOK) {
@@ -177,7 +177,7 @@ State_t StateMachineThread::ManualControlEvent() {
 
     StateID requested_state;
     osStatus_t status = osMessageQueueGet(g_state_change_req_queue, &requested_state, NULL, 0);
-    if (status == osErrorTimeout) {
+    if (status == osErrorResource) {
         return ManualControl;
     }
     else if (status == osOK) {
@@ -199,7 +199,7 @@ State_t StateMachineThread::NormalDangerFaultEvent() {
 
     StateID requested_state;
     osStatus_t status = osMessageQueueGet(g_state_change_req_queue, &requested_state, NULL, 0);
-    if (status == osErrorTimeout) {
+    if (status == osErrorResource) {
         return NormalDangerFault;
     }
     else if (status == osOK) {
@@ -216,7 +216,7 @@ State_t StateMachineThread::SevereDangerFaultEvent() {
     // TODO: turn off SVPWM, VHz, and PID
     stop_motor_pwm();
 
-    while (1) { asm("NOP"); }
+    osThreadYield();
 
     return SevereDangerFault;   // to avoid compiler warning
 }

@@ -3,7 +3,7 @@ file build/main.elf
 load
 
 # b main
-# b mc_entry
-# b runStateMachine
-b runLEDThread
+b mc_entry
+b runStateMachine
+b state_machine_thread.cpp:44
 
