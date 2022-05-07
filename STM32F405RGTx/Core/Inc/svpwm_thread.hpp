@@ -4,7 +4,7 @@
 #include "main.h"
 #include "util.hpp"
 
-#define MODINDEX               0.9                  // Set ModIndex here        
+#define MODINDEX               0.5                  // Set ModIndex here        
 #define FUNDAMENTAL_FREQ       1                    // Set Frequency here (kHz)]
 #define SWITCH_FREQ            1000
 #define	PI_THIRD		       1.04719755119660f

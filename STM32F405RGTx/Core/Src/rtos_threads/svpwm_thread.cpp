@@ -21,10 +21,11 @@ void SVPWMThread::initialize(){
 void SVPWMThread::runPWM(void* arg) {
 
 	while(1) {
-		osThreadFlagsWait(0x00000001U, osFlagsWaitAll, 0U);
+		// osThreadFlagsWait(0x00000001U, osFlagsWaitAll, 0U);
 		OldSector = svpwm.SectorPointer;
 		vhz.VHZ_Update(&vhz);
 		SVPWM_Update(&svpwm, &vhz, &htim1);
+		osDelay(50);
 	}
 
 }
