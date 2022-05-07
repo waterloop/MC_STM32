@@ -136,6 +136,18 @@ int main(void)
   MX_TIM3_Init();
   MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
+
+  // Start PWM timers
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+  HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
+  HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_2);
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
+  HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_3);
+
+  //Initialize the interrupt timer
+  HAL_TIM_Base_Start_IT(&htim9);
+
   mc_entry();
   /* USER CODE END 2 */
 

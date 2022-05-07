@@ -5,6 +5,8 @@
 #include "state_machine_thread.hpp"
 #include "CAN_thread.hpp"
 #include "LED_thread.hpp"
+#include "svpwm_thread.hpp"
+#include "vhz_thread.hpp" 
 
 // Thread Periodicities (ms)
 #define MEASUREMENTS_THREAD_PERIODICITY     100
