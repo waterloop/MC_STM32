@@ -21,6 +21,6 @@
 #define LED_THREAD_PERIODICITY              350
 #define LED_THREAD_PRIORITY                 osPriorityIdle
 
-#define SVPWM_THREAD_PERIODICITY            50
+#define SVPWM_THREAD_PERIODICITY            1
 #define SVPWM_THREAD_PRIORITY               osPriorityAboveNormal
 

@@ -5,7 +5,7 @@
 #include "util.hpp"
 
 #define MODINDEX               0.5                  // Set ModIndex here        
-#define FUNDAMENTAL_FREQ       1000                    // Set Frequency here (kHz)]
+#define FUNDAMENTAL_FREQ       10                   // Set Frequency here (kHz)]
 #define SWITCH_FREQ            10000
 #define	PI_THIRD		       1.04719755119660f
 #define RADIANS 		       6.28318530718f
@@ -14,20 +14,19 @@
 class SVPWM{
     public:
         float  ModIndex = 0;
-		 float  FundamentalFreq = 0;
-         float  SwitchFreq = SWITCH_FREQ;
-         float  Alpha = 0;
-         float  NewEntry = 0;
-         float  SectorPointer = 0;
-		 float  U = 0;
-         float  V = 0;
-		 float  W = 0;
-		 float  StepAngle = 0;
-		 float  EntryOld = 0;
-		 float  ta = 0;
-		 float  tb = 0;
-         float  to = 0;
-
+        float  FundamentalFreq = 0;
+        float  SwitchFreq = SWITCH_FREQ;
+        float  Alpha = 0;
+        float  NewEntry = 0;
+        float  SectorPointer = 0;
+        float  U = 0;
+        float  V = 0;
+        float  W = 0;
+        float  StepAngle = 0;
+        float  EntryOld = 0;
+        float  ta = 0;
+        float  tb = 0;
+        float  to = 0;
 };
 
 class SVPWMThread{
