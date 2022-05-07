@@ -24,7 +24,7 @@ void SVPWMThread::runPWM(void* arg) {
 		OldSector = svpwm.SectorPointer;
 		vhz.VHZ_Update(&vhz);
 		SVPWM_Update(&svpwm, &vhz, &htim1);
-		osDelay(1000);
+		osDelay(50);
 	}
 
 }

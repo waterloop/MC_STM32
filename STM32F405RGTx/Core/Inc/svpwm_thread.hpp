@@ -5,7 +5,7 @@
 #include "util.hpp"
 
 #define MODINDEX               0.5                  // Set ModIndex here        
-#define FUNDAMENTAL_FREQ       1                    // Set Frequency here (kHz)]
+#define FUNDAMENTAL_FREQ       1000                    // Set Frequency here (kHz)]
 #define SWITCH_FREQ            10000
 #define	PI_THIRD		       1.04719755119660f
 #define RADIANS 		       6.28318530718f
