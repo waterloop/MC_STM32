@@ -5,7 +5,8 @@
 #include "util.hpp"
 
 #define MODINDEX               0.9                  // Set ModIndex here        
-#define FUNDAMENTAL_FREQ       1                    // Set Frequency here (kHz)
+#define FUNDAMENTAL_FREQ       1                    // Set Frequency here (kHz)]
+#define SWITCH_FREQ            1000
 #define	PI_THIRD		       1.04719755119660f
 #define RADIANS 		       6.28318530718f
 #define SIN_PI_THIRD 	       0.86602540378f
@@ -14,7 +15,7 @@ class SVPWM{
     public:
         float  ModIndex;
 		 float  FundamentalFreq;
-         float  SwitchFreq;
+         float  SwitchFreq = SWITCH_FREQ;
          float  Alpha;
          float  NewEntry;
          float  SectorPointer;

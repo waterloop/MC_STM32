@@ -24,10 +24,11 @@ int mc_entry() {
     osKernelInitialize();
 
     printf("initializing rtos threads...\r\n");
-    MeasurementsThread::initialize();
-    StateMachineThread::initialize();
-    LEDThread::initialize();
-    CANThread::initialize();
+    // MeasurementsThread::initialize();
+    // StateMachineThread::initialize();
+    // LEDThread::initialize();
+    // CANThread::initialize();
+    SVPWMThread::initialize();
 
     printf("starting rtos scheduler...\r\n");
     osKernelStart();
