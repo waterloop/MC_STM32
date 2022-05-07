@@ -6,7 +6,7 @@
 
 #define MODINDEX               0.5                  // Set ModIndex here        
 #define FUNDAMENTAL_FREQ       1                    // Set Frequency here (kHz)]
-#define SWITCH_FREQ            1000
+#define SWITCH_FREQ            10000
 #define	PI_THIRD		       1.04719755119660f
 #define RADIANS 		       6.28318530718f
 #define SIN_PI_THIRD 	       0.86602540378f

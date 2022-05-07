@@ -12,7 +12,7 @@ VHZPROFILE SVPWMThread::vhz;
 void SVPWMThread::initialize(){
    	thread = RTOSThread(
         "svpwm_thread",
-        1024,
+        1024*5,
         osPriorityAboveNormal,
 		runPWM
     );
@@ -21,11 +21,10 @@ void SVPWMThread::initialize(){
 void SVPWMThread::runPWM(void* arg) {
 
 	while(1) {
-		// osThreadFlagsWait(0x00000001U, osFlagsWaitAll, 0U);
 		OldSector = svpwm.SectorPointer;
 		vhz.VHZ_Update(&vhz);
 		SVPWM_Update(&svpwm, &vhz, &htim1);
-		osDelay(50);
+		osDelay(1000);
 	}
 
 }
