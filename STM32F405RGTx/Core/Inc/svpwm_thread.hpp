@@ -13,20 +13,20 @@
 
 class SVPWM{
     public:
-        float  ModIndex;
-		 float  FundamentalFreq;
+        float  ModIndex = 0;
+		 float  FundamentalFreq = 0;
          float  SwitchFreq = SWITCH_FREQ;
-         float  Alpha;
-         float  NewEntry;
-         float  SectorPointer;
-		 float  U;
-         float  V;
-		 float  W;
-		 float  StepAngle;
-		 float  EntryOld;
-		 float  ta;
-		 float  tb;
-         float  to;
+         float  Alpha = 0;
+         float  NewEntry = 0;
+         float  SectorPointer = 0;
+		 float  U = 0;
+         float  V = 0;
+		 float  W = 0;
+		 float  StepAngle = 0;
+		 float  EntryOld = 0;
+		 float  ta = 0;
+		 float  tb = 0;
+         float  to = 0;
 
 };
 
