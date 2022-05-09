@@ -15,19 +15,15 @@ int mc_entry() {
     printf("starting LED PWM...\r\n");
     start_rgb_pwm();
 
-
-    // printf("initializing drivers...\r\n");
-    // drv8323 = Drv8323_init();
-    // if (Drv8323_setup(&drv8323) != DRV8323_OK) { Error_Handler(); };
-
     printf("initializing rtos kernel...\r\n");
     osKernelInitialize();
 
     printf("initializing rtos threads...\r\n");
-    MeasurementsThread::initialize();
-    StateMachineThread::initialize();
-    LEDThread::initialize();
-    CANThread::initialize();
+    // MeasurementsThread::initialize();
+    // StateMachineThread::initialize();
+    // LEDThread::initialize();
+    // CANThread::initialize();
+    SVPWMThread::initialize();
 
     printf("starting rtos scheduler...\r\n");
     osKernelStart();

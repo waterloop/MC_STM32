@@ -5,6 +5,8 @@
 #include "state_machine_thread.hpp"
 #include "CAN_thread.hpp"
 #include "LED_thread.hpp"
+#include "svpwm_thread.hpp"
+#include "vhz_thread.hpp" 
 
 // Thread Periodicities (ms)
 #define MEASUREMENTS_THREAD_PERIODICITY     100
@@ -18,4 +20,7 @@
 
 #define LED_THREAD_PERIODICITY              350
 #define LED_THREAD_PRIORITY                 osPriorityIdle
+
+#define SVPWM_THREAD_PERIODICITY            1
+#define SVPWM_THREAD_PRIORITY               osPriorityAboveNormal
 
