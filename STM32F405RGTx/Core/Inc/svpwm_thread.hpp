@@ -38,7 +38,7 @@ class SVPWMThread{
         static SVPWM svpwm;
 
         static void runPWM(void * args);
-        static void SVPWM_Update(SVPWM *svm, VHZPROFILE *vhz, TIM_HandleTypeDef *htim);
+        static void SVPWM_Update();
         static osThreadId_t getThreadId();
 
     private:
