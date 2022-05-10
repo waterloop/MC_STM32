@@ -23,13 +23,13 @@ void SVPWMThread::runPWM(void* arg) {
 	while(1) {
 		OldSector = svpwm.SectorPointer;
 		vhz.VHZ_Update(&vhz);
-		SVPWM_Update(&svpwm, &vhz, &htim1);
+		SVPWM_Update();
 		osDelay(SVPWM_THREAD_PERIODICITY);
 	}
 
 }
 
-void SVPWMThread::SVPWM_Update(SVPWM *svm, VHZPROFILE *vhz, TIM_HandleTypeDef *htim){
+void SVPWMThread::SVPWM_Update(){
 
 	svpwm.ModIndex = MODINDEX; /*vhz->Volt / vhz->VoltRated;*/
 	svpwm.FundamentalFreq = FUNDAMENTAL_FREQ; /*vhz->Freq;*/
