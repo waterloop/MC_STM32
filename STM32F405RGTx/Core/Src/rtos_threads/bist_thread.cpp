@@ -211,3 +211,4 @@ void BistThread::_toggle_fc() {
 void BistThread::_clear() {
     printf("\033[2J\r\n");
 }
+
