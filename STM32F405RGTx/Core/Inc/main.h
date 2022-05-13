@@ -46,6 +46,8 @@ extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim7;
 extern TIM_HandleTypeDef htim9;
 extern UART_HandleTypeDef huart4;
+
+#define BIST_Pin GPIO_PIN_11
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -100,6 +102,7 @@ void Error_Handler(void);
 #define TERM_GPIO_Port GPIOA
 #define CS_DRIVER_Pin GPIO_PIN_2
 #define CS_DRIVER_GPIO_Port GPIOD
+
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

@@ -19,6 +19,10 @@ float StateMachineThread::current_limit;
 void StateMachineThread::setState(State_t state_) { StateMachineThread::state = state_; }
 State_t StateMachineThread::getState() { return StateMachineThread::state; }
 
+void StateMachineThread::setFaultChecking(bool val) {
+    enable_fault_check = val;
+}
+
 void StateMachineThread::initialize() {
     StateMachineThread::thread = RTOSThread(
         "state_machine_thread",
