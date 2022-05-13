@@ -69,6 +69,7 @@ class StateMachineThread{
         // these need to be accessable to the CANThread for manual control mode
         static float current_limit;
         static float temperature_limit;
+        static void setFaultChecking(bool val);
 
     private:
         static RTOSThread thread;
