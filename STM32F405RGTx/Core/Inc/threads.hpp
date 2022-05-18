@@ -7,10 +7,14 @@
 #include "LED_thread.hpp"
 #include "svpwm_thread.hpp"
 #include "vhz_thread.hpp" 
+#include "accelerometer_thread.hpp"
 
 // Thread Periodicities (ms)
 #define MEASUREMENTS_THREAD_PERIODICITY     100
 #define MEASUREMENTS_THREAD_PRIORITY        osPriorityRealtime7
+
+#define ACCELEROMETER_THREAD_PERIODICITY 	100
+#define ACCELEROMETER_THREAD_PRIORITY		osPriorityRealtime4
 
 #define STATE_MACHINE_THREAD_PERIODICITY    150
 #define STATE_MACHINE_THREAD_PRIORITY       osPriorityRealtime6
